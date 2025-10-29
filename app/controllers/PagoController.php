@@ -93,10 +93,7 @@ class PagoController {
                 'concepto' => $concepto
             ]);
 
-            // Actualizar saldo restante del contrato
-            $nuevoSaldo = $contrato['saldo_restante'] - $montoPago;
-            $nuevoSaldo = max(0, $nuevoSaldo); // No permitir saldo negativo
-            $this->contratoModel->update($idContrato, ['saldo_restante' => $nuevoSaldo]);
+            // Nota: El saldo restante se actualiza solo al cerrar el período, no con cada pago individual
 
             $db->commit();
 

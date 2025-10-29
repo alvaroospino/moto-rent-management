@@ -61,6 +61,7 @@ $app->get('/contratos', 'ContratoController@index');
 $app->get('/contratos/create', 'ContratoController@create');
 $app->post('/contratos/store', 'ContratoController@store');
 $app->get('/contratos/detail/(\d+)', 'ContratoController@detail');
+$app->post('/contratos/(\d+)/cerrar-periodo/(\d+)', 'ContratoController@cerrarPeriodo');
 
 // Rutas de Pagos/Préstamos (Módulo 4 )
 $app->get('/pagos/contrato/(\d+)', 'PagoController@create');

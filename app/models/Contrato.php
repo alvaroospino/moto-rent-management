@@ -40,7 +40,7 @@ class Contrato extends BaseModel {
             'valor_vehiculo' => $data['valor_vehiculo'],
             'plazo_meses' => $data['plazo_meses'],
             'cuota_mensual' => $data['cuota_mensual'],
-            'saldo_restante' => $data['valor_vehiculo'], // Valor restante del vehículo (se reduce con abonos de capital)
+            'saldo_restante' => 0, // Capital amortizado (se incrementa con abonos de capital)
             'estado' => 'activo',
             'abono_capital_mensual' => $data['abono_capital_mensual'],
             'ganancia_mensual' => $data['ganancia_mensual']
@@ -102,13 +102,12 @@ class Contrato extends BaseModel {
             throw new Exception('Contrato no encontrado');
         }
 
-        $nuevoSaldo = $contrato['saldo_restante'] - $abonoCapital;
-        $nuevoSaldo = max(0, $nuevoSaldo);
+        $nuevoSaldo = $contrato['saldo_restante'] + $abonoCapital; // Suma el abono capital
 
         $this->update($idContrato, ['saldo_restante' => $nuevoSaldo]);
 
-        // Si el saldo llega a 0, marcar como finalizado
-        if ($nuevoSaldo <= 0) {
+        // Si el saldo llega al valor del vehículo, marcar como finalizado
+        if ($nuevoSaldo >= $contrato['valor_vehiculo']) {
             $this->update($idContrato, ['estado' => 'finalizado']);
         }
 
@@ -132,15 +131,44 @@ class Contrato extends BaseModel {
         }
 
         $periodoModel = new PeriodoContrato();
-        $abonos = $periodoModel->cerrarPeriodo(
-            $idPeriodo,
-            $contrato['cuota_mensual']
-        );
+        $periodo = $periodoModel->find($idPeriodo);
+        if (!$periodo) {
+            throw new Exception('Periodo no encontrado');
+        }
 
-        // Actualizar saldo
-        $this->actualizarSaldo($idContrato, $abonos['abono_capital']);
+        // Verificar que el periodo esté abierto
+        if ($periodo['estado_periodo'] !== 'abierto') {
+            return ['error' => 'El periodo ya está cerrado'];
+        }
 
-        return $abonos;
+        // Calcular total pagado en el periodo
+        $totalPagado = PagoContrato::getTotalPagadoEnPeriodo($idPeriodo);
+
+        // Si el total pagado es menor que la cuota mensual, no cerrar
+        if ($totalPagado < $contrato['cuota_mensual']) {
+            return ['error' => 'La cuota acumulada no alcanza el mínimo requerido para este periodo. Pagado: $' . number_format($totalPagado, 0, ',', '.') . ' de $' . number_format($contrato['cuota_mensual'], 0, ',', '.')];
+        }
+
+        // Cerrar el periodo
+        $fechaActual = date('Y-m-d');
+        $fechaFinPeriodo = $periodo['fecha_fin_periodo'];
+        $esPagoAnticipado = ($fechaActual < $fechaFinPeriodo);
+
+        $periodoModel->update($idPeriodo, [
+            'estado_periodo' => 'cerrado',
+            'cerrado_en' => date('Y-m-d H:i:s'),
+            'pago_anticipado' => $esPagoAnticipado ? 1 : 0
+        ]);
+
+        // Aplicar abono capital al saldo restante
+        $abonoCapital = $contrato['abono_capital_mensual'];
+        $this->actualizarSaldo($idContrato, $abonoCapital);
+
+        return [
+            'abono_capital' => $abonoCapital,
+            'pago_anticipado' => $esPagoAnticipado,
+            'total_pagado' => $totalPagado
+        ];
     }
 
     /**

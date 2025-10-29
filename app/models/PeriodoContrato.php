@@ -15,7 +15,8 @@ class PeriodoContrato extends BaseModel {
         'fecha_fin_periodo',
         'cuota_acumulada',
         'estado_periodo',
-        'cerrado_en'
+        'cerrado_en',
+        'pago_anticipado'
     ];
 
     /**
@@ -83,8 +84,8 @@ class PeriodoContrato extends BaseModel {
     public static function getPeriodoActual($idContrato) {
         $periodo = new self();
         return $periodo->where(['id_contrato' => $idContrato, 'estado_periodo' => 'abierto'])
-                      ->orderBy('numero_periodo', 'ASC')
-                      ->first();
+                    ->orderBy('numero_periodo', 'ASC')
+                    ->first();
     }
 
     /**
@@ -93,8 +94,8 @@ class PeriodoContrato extends BaseModel {
     public static function getPeriodosPorContrato($idContrato) {
         $periodo = new self();
         return $periodo->where(['id_contrato' => $idContrato])
-                      ->orderBy('numero_periodo', 'ASC')
-                      ->get();
+                    ->orderBy('numero_periodo', 'ASC')
+                    ->get();
     }
 
     /**
@@ -110,54 +111,5 @@ class PeriodoContrato extends BaseModel {
         $this->update($idPeriodo, ['cuota_acumulada' => $nuevaCuota]);
 
         return $nuevaCuota;
-    }
-
-    /**
-     * Cerrar periodo simplificado
-     */
-    public function cerrarPeriodo($idPeriodo, $cuotaMensual) {
-        $periodo = $this->find($idPeriodo);
-        if (!$periodo) {
-            throw new Exception('Periodo no encontrado');
-        }
-
-        // Obtener el contrato para acceder al abono capital mensual
-        $contratoModel = new Contrato();
-        $contrato = $contratoModel->find($periodo['id_contrato']);
-        if (!$contrato) {
-            throw new Exception('Contrato no encontrado');
-        }
-
-        $cuotaAcumulada = $periodo['cuota_acumulada'];
-        $fechaActual = date('Y-m-d');
-        $fechaInicioPeriodo = $periodo['fecha_inicio_periodo'];
-        $fechaFinPeriodo = $periodo['fecha_fin_periodo'];
-
-        // Validar que estamos dentro del periodo correspondiente
-        if ($fechaActual < $fechaInicioPeriodo || $fechaActual > $fechaFinPeriodo) {
-            // No se puede cerrar el periodo fuera de las fechas establecidas
-            return [
-                'abono_capital' => 0,
-                'error' => 'No se puede cerrar el periodo fuera de las fechas establecidas'
-            ];
-        }
-
-        // Si la cuota acumulada es mayor o igual a la cuota mensual Y estamos en el periodo correcto, cerrar el periodo
-        if ($cuotaAcumulada >= $cuotaMensual) {
-            $this->update($idPeriodo, [
-                'estado_periodo' => 'cerrado',
-                'cerrado_en' => date('Y-m-d H:i:s')
-            ]);
-
-            return [
-                'abono_capital' => $contrato['abono_capital_mensual'] ?? $cuotaMensual
-            ];
-        }
-
-        // Si no se ha completado la cuota completa, no cerrar el periodo ni aplicar abono capital
-        return [
-            'abono_capital' => 0,
-            'error' => 'La cuota acumulada no alcanza el mínimo requerido para este periodo'
-        ];
     }
 }

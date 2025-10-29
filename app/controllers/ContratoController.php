@@ -8,14 +8,14 @@ require_once __DIR__ . '/../models/Moto.php';
 
 class ContratoController {
 
-    public function index() {
+   public function index() {
         // Verificar permisos
         Session::checkPermission(['administrador', 'operador']);
 
         // Obtener contratos activos
         $contratos = Contrato::getContratosActivos();
 
-        // Para cada contrato, obtener información del cliente y moto
+        // Para cada contrato, obtener información del cliente y moto, y calcular saldo por pagar
         foreach ($contratos as &$contrato) {
             $clienteModel = new Cliente();
             $cliente = $clienteModel->find($contrato['id_cliente'] ?? null);
@@ -25,7 +25,17 @@ class ContratoController {
             $contrato['cliente_nombre'] = $cliente ? $cliente['nombre_completo'] : 'N/A';
             $contrato['moto_marca'] = $moto ? $moto['marca'] : 'N/A';
             $contrato['moto_modelo'] = $moto ? $moto['modelo'] : 'N/A';
+
+            // saldo_restante en DB representa el capital amortizado acumulado.
+            // Para la UI, mostrar el saldo por pagar real: valor_vehiculo - saldo_restante acumulado.
+            $valorVehiculo = isset($contrato['valor_vehiculo']) ? (float)$contrato['valor_vehiculo'] : 0.0;
+            $capitalAmortizado = isset($contrato['saldo_restante']) ? (float)$contrato['saldo_restante'] : 0.0;
+            $saldoPorPagar = max(0, $valorVehiculo - $capitalAmortizado);
+            $contrato['saldo_por_pagar'] = $saldoPorPagar;
         }
+
+        // ¡EL FIX! Elimina la referencia para evitar fugas de datos al próximo controlador/vista.
+        unset($contrato); //
 
         // Carga el layout principal, inyectando la vista específica
         $contentView = __DIR__ . '/../views/contratos/index.php';
@@ -196,6 +206,42 @@ class ContratoController {
             ]);
         } catch (Exception $e) {
             echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function cerrarPeriodo($idContrato, $idPeriodo) {
+
+        header('Content-Type: application/json');
+
+        // Verificar autenticación y permisos sin redireccionar
+        if (!Session::isLoggedIn()) {
+            echo json_encode(['success' => false, 'message' => 'Sesión expirada. Por favor, inicie sesión nuevamente.']);
+            exit;
+        }
+
+        if (!in_array(Session::getUserRole(), ['administrador', 'operador'])) {
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para realizar esta acción.']);
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+
+        try {
+            $contratoModel = new Contrato();
+            $resultado = $contratoModel->cerrarPeriodo($idContrato, $idPeriodo);
+
+            if ($resultado && !isset($resultado['error'])) {
+                echo json_encode(['success' => true, 'message' => 'Período cerrado exitosamente']);
+            } else {
+                $message = isset($resultado['error']) ? $resultado['error'] : 'No se pudo cerrar el período';
+                echo json_encode(['success' => false, 'message' => $message]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
         exit;
     }

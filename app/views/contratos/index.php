@@ -66,10 +66,10 @@
                                     $<?= number_format($contrato['valor_vehiculo'], 0, ',', '.') ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    $<?= number_format($contrato['cuota_mensual_total'], 0, ',', '.') ?>
+                                    $<?= number_format($contrato['cuota_mensual'], 0, ',', '.') ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    $<?= number_format($contrato['saldo_capital_restante'], 0, ',', '.') ?>
+                                    $<?= number_format($contrato['saldo_por_pagar'] ?? max(0, ($contrato['valor_vehiculo'] ?? 0) - ($contrato['saldo_restante'] ?? 0)), 0, ',', '.') ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full

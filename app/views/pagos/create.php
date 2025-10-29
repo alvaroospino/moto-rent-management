@@ -69,7 +69,7 @@ $contentView = __DIR__ . '/create_content.php';
                             <div>
                                 <span class="text-gray-600">Saldo Capital Restante:</span>
                                 <span class="font-medium ml-2 text-orange-600">
-                                    $<?= number_format($contrato['saldo_capital_restante'] ?? 0, 0, ',', '.') ?>
+                                    $<?= number_format($contrato['saldo_restante'] ?? 0, 0, ',', '.') ?>
                                 </span>
                             </div>
                             <div>
