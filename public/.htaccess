@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	# Si el proyecto está en un subdirectorio, Apache normalmente ya incluye el prefijo en REQUEST_URI.
+	# Estas reglas envían todas las peticiones no estáticas a index.php (front controller).
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+# Nota: Si sigues obteniendo 404, considera configurar un VirtualHost cuyo DocumentRoot apunte
+# a la carpeta "public" (recomendado para producción/desarrollo local), por ejemplo:
+# <VirtualHost *:80>
+#   ServerName moto-rent.local
+#   DocumentRoot "c:/xampp/htdocs/moto-rent-management/public"
+#   <Directory "c:/xampp/htdocs/moto-rent-management/public">
+#       AllowOverride All
+#       Require all granted
+#   </Directory>
+# </VirtualHost>
