@@ -903,6 +903,115 @@
                     </div>
                 </div>
 
+                <!-- Control Diario del Periodo Actual -->
+                <div class="section-card mb-6">
+                    <div class="section-card-header">
+                        <div class="section-card-header-icon bg-amber-100 text-amber-600">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <h2>Control Diario (Periodo Actual)</h2>
+                    </div>
+                    <div class="section-card-body">
+                        <?php
+                        // Determinar periodo actual de la lista disponible
+                        $periodoActualVista = null;
+                        if (!empty($periodos)) {
+                            foreach ($periodos as $p) {
+                                if (($p['estado_periodo'] ?? '') === 'abierto') { $periodoActualVista = $p; break; }
+                            }
+                            if (!$periodoActualVista) { $periodoActualVista = $periodos[0]; }
+                        }
+                        ?>
+
+                        <?php if ($periodoActualVista): ?>
+                            <?php
+                            // Cargar días del periodo (requiere PeriodoContrato::getDiasPeriodo)
+                            $diasPeriodo = PeriodoContrato::getDiasPeriodo($contrato['id_contrato'], $periodoActualVista['id_periodo']);
+                            // Resumen
+                            $habiles = 0; $pagados = 0; $pendientes = 0; $nopago = 0; $totalDia = 0;
+                            foreach ($diasPeriodo as $d) {
+                                if ((int)$d['es_domingo'] === 1) { continue; }
+                                $habiles++;
+                                $totalDia += (float)$d['monto_pagado'];
+                                switch ($d['estado_dia']) {
+                                    case 'pagado': $pagados++; break;
+                                    case 'no_pago': $nopago++; break;
+                                    default: $pendientes++; break;
+                                }
+                            }
+                            ?>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-xs">
+                                <div class="bg-gray-50 border rounded p-2">
+                                    <div class="text-gray-500">Días Hábiles</div>
+                                    <div class="font-bold text-gray-800"><?= $habiles ?></div>
+                                </div>
+                                <div class="bg-green-50 border border-green-200 rounded p-2">
+                                    <div class="text-green-700">Días Pagados</div>
+                                    <div class="font-bold text-green-800"><?= $pagados ?></div>
+                                </div>
+                                <div class="bg-amber-50 border border-amber-200 rounded p-2">
+                                    <div class="text-amber-700">Pendientes</div>
+                                    <div class="font-bold text-amber-800"><?= $pendientes ?></div>
+                                </div>
+                                <div class="bg-red-50 border border-red-200 rounded p-2">
+                                    <div class="text-red-700">No Pago</div>
+                                    <div class="font-bold text-red-800"><?= $nopago ?></div>
+                                </div>
+                            </div>
+
+                            <div class="table-container scrollable-table">
+                                <table class="compact-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Estado</th>
+                                            <th>Monto Día</th>
+                                            <th>Obs.</th>
+                                            <th class="text-right">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($diasPeriodo as $dia): ?>
+                                            <?php if ((int)$dia['es_domingo'] === 1) continue; ?>
+                                            <tr>
+                                                <td><?= date('d/m/Y', strtotime($dia['fecha'])) ?></td>
+                                                <td>
+                                                    <span class="badge-small <?php 
+                                                        echo $dia['estado_dia']==='pagado'?'badge-green':($dia['estado_dia']==='no_pago'?'badge-amber':''); ?>">
+                                                        <i class="fas fa-circle"></i>
+                                                        <?= htmlspecialchars($dia['estado_dia']) ?>
+                                                    </span>
+                                                </td>
+                                                <td>$<?= number_format($dia['monto_pagado'], 0, ',', '.') ?></td>
+                                                <td class="text-xs text-gray-600"><?= htmlspecialchars($dia['observacion'] ?? '') ?></td>
+                                                <td class="text-right">
+                                                    <div class="flex gap-2 justify-end">
+                                                        <a class="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded" href="<?= BASE_URL ?>pagos/contrato/<?= $contrato['id_contrato'] ?>?fecha=<?= htmlspecialchars($dia['fecha']) ?>">
+                                                            <i class="fas fa-plus mr-1"></i>Pago
+                                                        </a>
+                                                        <form method="POST" action="<?= BASE_URL ?>pagos/marcar-no-pago">
+                                                            <input type="hidden" name="id_contrato" value="<?= $contrato['id_contrato'] ?>">
+                                                            <input type="hidden" name="id_periodo" value="<?= $periodoActualVista['id_periodo'] ?>">
+                                                            <input type="hidden" name="fecha" value="<?= htmlspecialchars($dia['fecha']) ?>">
+                                                            <button class="text-xs px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded" type="submit" onclick="return confirm('¿Marcar no pago el <?= date('d/m/Y', strtotime($dia['fecha'])) ?>?')">
+                                                                <i class="fas fa-ban mr-1"></i>No pago
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="text-center py-6 text-gray-500 text-sm">
+                                No hay periodo actual disponible.
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
                 <!-- Grid de Periodos e Historial de Pagos -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 

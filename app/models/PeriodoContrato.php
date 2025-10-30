@@ -8,6 +8,40 @@ class PeriodoContrato extends BaseModel {
         parent::__construct('periodos_contrato', 'id_periodo');
     }
 
+    /**
+     * Poblar días hábiles (excluyendo domingos) para un periodo en pagos_diarios_contrato.
+     * No duplica si ya existen (apoya constraint UNIQUE).
+     */
+    public static function poblarDiasHabilesPeriodo($idContrato, $idPeriodo, $fechaInicio, $fechaFin) {
+        $db = Database::getInstance()->getConnection();
+        $fecha = strtotime($fechaInicio);
+        $fin = strtotime($fechaFin);
+
+        $insertStmt = $db->prepare("INSERT IGNORE INTO pagos_diarios_contrato (id_contrato, id_periodo, fecha, es_domingo, estado_dia) VALUES (:id_contrato, :id_periodo, :fecha, :es_domingo, :estado_dia)");
+
+        while ($fecha <= $fin) {
+            $isSunday = (date('w', $fecha) == 0) ? 1 : 0;
+            $estado = $isSunday ? 'pendiente' : 'pendiente';
+            // Insertar todos los días, marcaremos domingos con es_domingo=1 para poder ocultarlos en UI.
+            $insertStmt->execute([
+                'id_contrato' => $idContrato,
+                'id_periodo' => $idPeriodo,
+                'fecha' => date('Y-m-d', $fecha),
+                'es_domingo' => $isSunday,
+                'estado_dia' => 'pendiente'
+            ]);
+            $fecha = strtotime('+1 day', $fecha);
+        }
+
+        // Marcar bandera en periodo si la columna existe (ignorar error si no existe)
+        try {
+            $upd = $db->prepare("UPDATE periodos_contrato SET dias_generados = 1 WHERE id_periodo = :id");
+            $upd->execute([':id' => $idPeriodo]);
+        } catch (Exception $e) {
+            // columna opcional
+        }
+    }
+
     protected $fillable = [
         'id_contrato',
         'numero_periodo',
@@ -96,6 +130,25 @@ class PeriodoContrato extends BaseModel {
         return $periodo->where(['id_contrato' => $idContrato])
                     ->orderBy('numero_periodo', 'ASC')
                     ->get();
+    }
+
+    /**
+     * Obtener días del periodo desde pagos_diarios_contrato
+     */
+    public static function getDiasPeriodo($idContrato, $idPeriodo) {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT * FROM pagos_diarios_contrato WHERE id_contrato = :c AND id_periodo = :p ORDER BY fecha ASC");
+        $stmt->execute([':c' => $idContrato, ':p' => $idPeriodo]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Marcar estado de un día (pagado/pendiente/no_pago) y opcional observación
+     */
+    public static function marcarEstadoDia($idContrato, $idPeriodo, $fecha, $estado, $observacion = null) {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("UPDATE pagos_diarios_contrato SET estado_dia = :e, observacion = :o WHERE id_contrato = :c AND id_periodo = :p AND fecha = :f");
+        return $stmt->execute([':e' => $estado, ':o' => $observacion, ':c' => $idContrato, ':p' => $idPeriodo, ':f' => $fecha]);
     }
 
     /**

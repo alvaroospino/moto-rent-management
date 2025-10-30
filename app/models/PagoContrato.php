@@ -18,6 +18,32 @@ class PagoContrato extends BaseModel {
     ];
 
     /**
+     * Actualiza el control diario SOLO para la fecha del pago.
+     * No distribuye a otros días.
+     */
+    public static function reflejarEnControlDiario($idContrato, $idPeriodo, $fechaPago, $montoDelta) {
+        $db = Database::getInstance()->getConnection();
+
+        // Asegurar que el día existe en pagos_diarios_contrato (en caso de no haberse generado aún)
+        $stmt = $db->prepare("INSERT IGNORE INTO pagos_diarios_contrato (id_contrato, id_periodo, fecha, es_domingo, estado_dia, monto_pagado) VALUES (:id_contrato, :id_periodo, :fecha, IF(WEEKDAY(:fecha2)=6,1,0), 'pendiente', 0.00)");
+        $stmt->execute([
+            'id_contrato' => $idContrato,
+            'id_periodo' => $idPeriodo,
+            'fecha' => $fechaPago,
+            'fecha2' => $fechaPago,
+        ]);
+
+        // Actualizar monto y estado del día
+        $upd = $db->prepare("UPDATE pagos_diarios_contrato SET monto_pagado = GREATEST(0, monto_pagado + :delta), estado_dia = CASE WHEN (monto_pagado + :delta) > 0 THEN 'pagado' ELSE 'pendiente' END WHERE id_contrato = :id_contrato AND id_periodo = :id_periodo AND fecha = :fecha");
+        $upd->execute([
+            'delta' => $montoDelta,
+            'id_contrato' => $idContrato,
+            'id_periodo' => $idPeriodo,
+            'fecha' => $fechaPago,
+        ]);
+    }
+
+    /**
      * Registrar un pago en un periodo
      */
     public function registrarPago($data) {
@@ -43,6 +69,9 @@ class PagoContrato extends BaseModel {
 
         // Actualizar cuota acumulada en el periodo
         $periodoModel->actualizarCuotaAcumulada($data['id_periodo'], $data['monto_pago']);
+
+        // Reflejar SOLO el día del pago en control diario (no distribuir)
+        self::reflejarEnControlDiario($data['id_contrato'], $data['id_periodo'], $data['fecha_pago'], $data['monto_pago']);
 
         return $pagoId;
     }

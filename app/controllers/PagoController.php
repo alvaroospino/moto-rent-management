@@ -11,6 +11,37 @@ class PagoController {
     
     private $contratoModel;
 
+    /**
+     * Marcar un día como no_pago (o restablecer a pendiente/pagado con otra acción en el futuro)
+     */
+    public function marcarNoPagoDia() {
+        Session::checkPermission(['administrador', 'operador', 'contador']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . 'dashboard');
+            exit;
+        }
+
+        $idContrato = (int)($_POST['id_contrato'] ?? 0);
+        $idPeriodo = (int)($_POST['id_periodo'] ?? 0);
+        $fecha = trim($_POST['fecha'] ?? '');
+        $observacion = trim($_POST['observacion'] ?? '');
+
+        if (!$idContrato || !$idPeriodo || !$fecha) {
+            header("Location: " . BASE_URL . "contratos/detail/{$idContrato}?error=Datos incompletos para marcar no pago.");
+            exit;
+        }
+
+        try {
+            PeriodoContrato::marcarEstadoDia($idContrato, $idPeriodo, $fecha, 'no_pago', $observacion);
+            header("Location: " . BASE_URL . "contratos/detail/{$idContrato}?success=Día ${fecha} marcado como no pago.");
+            exit;
+        } catch (Exception $e) {
+            header("Location: " . BASE_URL . "contratos/detail/{$idContrato}?error=" . urlencode('Error al marcar no pago: ' . $e->getMessage()));
+            exit;
+        }
+    }
+
     public function __construct() {
         $this->contratoModel = new Contrato();
     }
@@ -59,6 +90,7 @@ class PagoController {
         $montoPago = floatval($_POST['monto_pago']);
         $concepto = trim($_POST['concepto'] ?? 'Pago del cliente.');
         $idUsuario = Session::get('user_id');
+        $fechaPago = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d');
 
         if ($montoPago <= 0) {
             header("Location: " . BASE_URL . "contratos/detail/{$idContrato}?error=El monto del pago debe ser positivo.");
@@ -88,7 +120,7 @@ class PagoController {
                 'id_contrato' => $idContrato,
                 'id_periodo' => $periodoActual['id_periodo'],
                 'id_usuario' => $idUsuario,
-                'fecha_pago' => date('Y-m-d'),
+                'fecha_pago' => $fechaPago,
                 'monto_pago' => $montoPago,
                 'concepto' => $concepto
             ]);

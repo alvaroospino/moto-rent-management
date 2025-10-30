@@ -50,7 +50,14 @@ class Contrato extends BaseModel {
         $contratoId = $contrato->create($contratoData);
 
         // Crear periodos mensuales simples para el contrato
-        PeriodoContrato::crearPeriodosParaContrato($contratoId, $data['fecha_inicio'], $data['plazo_meses']);
+        $periodos = PeriodoContrato::crearPeriodosParaContrato($contratoId, $data['fecha_inicio'], $data['plazo_meses']);
+
+        // Poblar días del primer periodo generado (y opcionalmente todos)
+        $periodoModel = new PeriodoContrato();
+        $created = $periodoModel->where(['id_contrato' => $contratoId])->orderBy('numero_periodo','ASC')->get();
+        foreach ($created as $p) {
+            PeriodoContrato::poblarDiasHabilesPeriodo($contratoId, $p['id_periodo'], $p['fecha_inicio_periodo'], $p['fecha_fin_periodo']);
+        }
 
         return $contratoId;
     }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 29-10-2025 a las 20:53:21
+-- Tiempo de generación: 30-10-2025 a las 17:07:18
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -61,16 +61,17 @@ CREATE TABLE `contratos` (
   `estado` enum('activo','finalizado','cancelado') NOT NULL DEFAULT 'activo',
   `creado_en` timestamp NOT NULL DEFAULT current_timestamp(),
   `abono_capital_mensual` decimal(10,2) NOT NULL COMMENT 'Abono mensual',
-  `ganancia_mensual` decimal(10,2) NOT NULL COMMENT 'Ganancia mensual del contrato'
+  `ganancia_mensual` decimal(10,2) NOT NULL COMMENT 'Ganancia mensual del contrato',
+  `cuota_diaria` decimal(12,2) DEFAULT NULL COMMENT 'Valor de la cuota diaria esperada'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `contratos`
 --
 
-INSERT INTO `contratos` (`id_contrato`, `id_cliente`, `id_moto`, `fecha_inicio`, `valor_vehiculo`, `plazo_meses`, `cuota_mensual`, `saldo_restante`, `estado`, `creado_en`, `abono_capital_mensual`, `ganancia_mensual`) VALUES
-(2, 1, 3, '2025-10-29', 5500000.00, 18, 650000.00, 300000.00, 'activo', '2025-10-29 04:10:52', 300000.00, 350000.00),
-(4, 1, 3, '2025-10-29', 5500000.00, 18, 600000.00, 0.00, 'activo', '2025-10-29 04:47:57', 200000.00, 400000.00);
+INSERT INTO `contratos` (`id_contrato`, `id_cliente`, `id_moto`, `fecha_inicio`, `valor_vehiculo`, `plazo_meses`, `cuota_mensual`, `saldo_restante`, `estado`, `creado_en`, `abono_capital_mensual`, `ganancia_mensual`, `cuota_diaria`) VALUES
+(2, 1, 3, '2025-10-29', 5500000.00, 18, 650000.00, 600000.00, 'activo', '2025-10-29 04:10:52', 300000.00, 350000.00, 25000.00),
+(4, 1, 3, '2025-10-29', 5500000.00, 18, 600000.00, 0.00, 'activo', '2025-10-29 04:47:57', 200000.00, 400000.00, 23076.92);
 
 -- --------------------------------------------------------
 
@@ -143,17 +144,74 @@ CREATE TABLE `pagos_contrato` (
   `fecha_pago` date NOT NULL,
   `monto_pago` decimal(10,2) NOT NULL,
   `concepto` varchar(255) DEFAULT '',
-  `creado_en` timestamp NOT NULL DEFAULT current_timestamp()
+  `creado_en` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp() COMMENT 'Última fecha de actualización del pago'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `pagos_contrato`
 --
 
-INSERT INTO `pagos_contrato` (`id_pago`, `id_contrato`, `id_periodo`, `id_usuario`, `fecha_pago`, `monto_pago`, `concepto`, `creado_en`) VALUES
-(5, 2, 19, 1, '2025-10-29', 50000.00, 'Pago del cliente.', '2025-10-29 04:14:57'),
-(6, 2, 19, 1, '2025-10-29', 600000.00, 'Pago del cliente.', '2025-10-29 04:15:45'),
-(7, 2, 20, 1, '2025-10-29', 25000.00, 'Pago del cliente.', '2025-10-29 17:57:18');
+INSERT INTO `pagos_contrato` (`id_pago`, `id_contrato`, `id_periodo`, `id_usuario`, `fecha_pago`, `monto_pago`, `concepto`, `creado_en`, `updated_at`) VALUES
+(5, 2, 19, 1, '2025-10-29', 50000.00, 'Pago del cliente.', '2025-10-29 04:14:57', NULL),
+(6, 2, 19, 1, '2025-10-29', 600000.00, 'Pago del cliente.', '2025-10-29 04:15:45', NULL),
+(7, 2, 20, 1, '2025-10-29', 25000.00, 'Pago del cliente.', '2025-10-29 17:57:18', NULL),
+(8, 2, 20, 1, '2025-10-29', 625000.00, 'Pago del cliente.', '2025-10-29 19:59:45', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pagos_contrato_historial`
+--
+
+CREATE TABLE `pagos_contrato_historial` (
+  `id_historial` int(10) UNSIGNED NOT NULL,
+  `id_pago` int(10) UNSIGNED NOT NULL,
+  `id_contrato` int(10) UNSIGNED NOT NULL,
+  `id_periodo` int(10) UNSIGNED NOT NULL,
+  `id_usuario` int(10) UNSIGNED DEFAULT NULL,
+  `fecha_pago` date NOT NULL,
+  `monto_pago` decimal(12,2) NOT NULL,
+  `concepto` varchar(255) DEFAULT NULL,
+  `accion` enum('creacion','edicion','eliminacion') NOT NULL,
+  `motivo` text DEFAULT NULL,
+  `editado_por` int(10) UNSIGNED DEFAULT NULL,
+  `editado_en` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pagos_diarios_contrato`
+--
+
+CREATE TABLE `pagos_diarios_contrato` (
+  `id_pago_diario` int(10) UNSIGNED NOT NULL,
+  `id_contrato` int(10) UNSIGNED NOT NULL,
+  `id_periodo` int(10) UNSIGNED NOT NULL,
+  `fecha` date NOT NULL,
+  `es_domingo` tinyint(1) NOT NULL DEFAULT 0,
+  `estado_dia` enum('pagado','pendiente','no_pago') NOT NULL DEFAULT 'pendiente',
+  `monto_pagado` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `observacion` text DEFAULT NULL,
+  `id_usuario_registra` int(10) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pago_contrato_asignacion_dias`
+--
+
+CREATE TABLE `pago_contrato_asignacion_dias` (
+  `id_asignacion` int(10) UNSIGNED NOT NULL,
+  `id_pago` int(10) UNSIGNED NOT NULL,
+  `id_pago_diario` int(10) UNSIGNED NOT NULL,
+  `monto_asignado` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `creado_en` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -170,50 +228,51 @@ CREATE TABLE `periodos_contrato` (
   `cuota_acumulada` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'Suma de pagos en el periodo',
   `estado_periodo` enum('abierto','cerrado') NOT NULL DEFAULT 'abierto',
   `cerrado_en` timestamp NULL DEFAULT NULL,
-  `pago_anticipado` tinyint(1) DEFAULT 0
+  `pago_anticipado` tinyint(1) DEFAULT 0,
+  `dias_generados` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Indica si ya se generaron los días del periodo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `periodos_contrato`
 --
 
-INSERT INTO `periodos_contrato` (`id_periodo`, `id_contrato`, `numero_periodo`, `fecha_inicio_periodo`, `fecha_fin_periodo`, `cuota_acumulada`, `estado_periodo`, `cerrado_en`, `pago_anticipado`) VALUES
-(19, 2, 1, '2025-10-29', '2025-11-28', 649999.99, 'cerrado', '2025-10-29 10:21:05', 1),
-(20, 2, 2, '2025-11-29', '2025-12-28', 25000.00, 'abierto', NULL, 0),
-(21, 2, 3, '2025-12-29', '2026-01-28', 0.00, 'abierto', NULL, 0),
-(22, 2, 4, '2026-01-29', '2026-02-28', 0.00, 'abierto', NULL, 0),
-(23, 2, 5, '2026-03-01', '2026-03-31', 0.00, 'abierto', NULL, 0),
-(24, 2, 6, '2026-04-01', '2026-04-30', 0.00, 'abierto', NULL, 0),
-(25, 2, 7, '2026-05-01', '2026-05-31', 0.00, 'abierto', NULL, 0),
-(26, 2, 8, '2026-06-01', '2026-06-30', 0.00, 'abierto', NULL, 0),
-(27, 2, 9, '2026-07-01', '2026-07-31', 0.00, 'abierto', NULL, 0),
-(28, 2, 10, '2026-08-01', '2026-08-31', 0.00, 'abierto', NULL, 0),
-(29, 2, 11, '2026-09-01', '2026-09-30', 0.00, 'abierto', NULL, 0),
-(30, 2, 12, '2026-10-01', '2026-10-31', 0.00, 'abierto', NULL, 0),
-(31, 2, 13, '2026-11-01', '2026-11-30', 0.00, 'abierto', NULL, 0),
-(32, 2, 14, '2026-12-01', '2026-12-31', 0.00, 'abierto', NULL, 0),
-(33, 2, 15, '2027-01-01', '2027-01-31', 0.00, 'abierto', NULL, 0),
-(34, 2, 16, '2027-02-01', '2027-02-28', 0.00, 'abierto', NULL, 0),
-(35, 2, 17, '2027-03-01', '2027-03-31', 0.00, 'abierto', NULL, 0),
-(36, 2, 18, '2027-04-01', '2027-04-30', 0.00, 'abierto', NULL, 0),
-(55, 4, 1, '2025-10-29', '2025-11-28', 0.00, 'abierto', NULL, 0),
-(56, 4, 2, '2025-11-29', '2025-12-28', 0.00, 'abierto', NULL, 0),
-(57, 4, 3, '2025-12-29', '2026-01-28', 0.00, 'abierto', NULL, 0),
-(58, 4, 4, '2026-01-29', '2026-02-28', 0.00, 'abierto', NULL, 0),
-(59, 4, 5, '2026-03-01', '2026-03-31', 0.00, 'abierto', NULL, 0),
-(60, 4, 6, '2026-04-01', '2026-04-30', 0.00, 'abierto', NULL, 0),
-(61, 4, 7, '2026-05-01', '2026-05-31', 0.00, 'abierto', NULL, 0),
-(62, 4, 8, '2026-06-01', '2026-06-30', 0.00, 'abierto', NULL, 0),
-(63, 4, 9, '2026-07-01', '2026-07-31', 0.00, 'abierto', NULL, 0),
-(64, 4, 10, '2026-08-01', '2026-08-31', 0.00, 'abierto', NULL, 0),
-(65, 4, 11, '2026-09-01', '2026-09-30', 0.00, 'abierto', NULL, 0),
-(66, 4, 12, '2026-10-01', '2026-10-31', 0.00, 'abierto', NULL, 0),
-(67, 4, 13, '2026-11-01', '2026-11-30', 0.00, 'abierto', NULL, 0),
-(68, 4, 14, '2026-12-01', '2026-12-31', 0.00, 'abierto', NULL, 0),
-(69, 4, 15, '2027-01-01', '2027-01-31', 0.00, 'abierto', NULL, 0),
-(70, 4, 16, '2027-02-01', '2027-02-28', 0.00, 'abierto', NULL, 0),
-(71, 4, 17, '2027-03-01', '2027-03-31', 0.00, 'abierto', NULL, 0),
-(72, 4, 18, '2027-04-01', '2027-04-30', 0.00, 'abierto', NULL, 0);
+INSERT INTO `periodos_contrato` (`id_periodo`, `id_contrato`, `numero_periodo`, `fecha_inicio_periodo`, `fecha_fin_periodo`, `cuota_acumulada`, `estado_periodo`, `cerrado_en`, `pago_anticipado`, `dias_generados`) VALUES
+(19, 2, 1, '2025-10-29', '2025-11-28', 649999.99, 'cerrado', '2025-10-29 10:21:05', 1, 0),
+(20, 2, 2, '2025-11-29', '2025-12-28', 650000.00, 'cerrado', '2025-10-30 01:59:56', 1, 0),
+(21, 2, 3, '2025-12-29', '2026-01-28', 0.00, 'abierto', NULL, 0, 0),
+(22, 2, 4, '2026-01-29', '2026-02-28', 0.00, 'abierto', NULL, 0, 0),
+(23, 2, 5, '2026-03-01', '2026-03-31', 0.00, 'abierto', NULL, 0, 0),
+(24, 2, 6, '2026-04-01', '2026-04-30', 0.00, 'abierto', NULL, 0, 0),
+(25, 2, 7, '2026-05-01', '2026-05-31', 0.00, 'abierto', NULL, 0, 0),
+(26, 2, 8, '2026-06-01', '2026-06-30', 0.00, 'abierto', NULL, 0, 0),
+(27, 2, 9, '2026-07-01', '2026-07-31', 0.00, 'abierto', NULL, 0, 0),
+(28, 2, 10, '2026-08-01', '2026-08-31', 0.00, 'abierto', NULL, 0, 0),
+(29, 2, 11, '2026-09-01', '2026-09-30', 0.00, 'abierto', NULL, 0, 0),
+(30, 2, 12, '2026-10-01', '2026-10-31', 0.00, 'abierto', NULL, 0, 0),
+(31, 2, 13, '2026-11-01', '2026-11-30', 0.00, 'abierto', NULL, 0, 0),
+(32, 2, 14, '2026-12-01', '2026-12-31', 0.00, 'abierto', NULL, 0, 0),
+(33, 2, 15, '2027-01-01', '2027-01-31', 0.00, 'abierto', NULL, 0, 0),
+(34, 2, 16, '2027-02-01', '2027-02-28', 0.00, 'abierto', NULL, 0, 0),
+(35, 2, 17, '2027-03-01', '2027-03-31', 0.00, 'abierto', NULL, 0, 0),
+(36, 2, 18, '2027-04-01', '2027-04-30', 0.00, 'abierto', NULL, 0, 0),
+(55, 4, 1, '2025-10-29', '2025-11-28', 0.00, 'abierto', NULL, 0, 0),
+(56, 4, 2, '2025-11-29', '2025-12-28', 0.00, 'abierto', NULL, 0, 0),
+(57, 4, 3, '2025-12-29', '2026-01-28', 0.00, 'abierto', NULL, 0, 0),
+(58, 4, 4, '2026-01-29', '2026-02-28', 0.00, 'abierto', NULL, 0, 0),
+(59, 4, 5, '2026-03-01', '2026-03-31', 0.00, 'abierto', NULL, 0, 0),
+(60, 4, 6, '2026-04-01', '2026-04-30', 0.00, 'abierto', NULL, 0, 0),
+(61, 4, 7, '2026-05-01', '2026-05-31', 0.00, 'abierto', NULL, 0, 0),
+(62, 4, 8, '2026-06-01', '2026-06-30', 0.00, 'abierto', NULL, 0, 0),
+(63, 4, 9, '2026-07-01', '2026-07-31', 0.00, 'abierto', NULL, 0, 0),
+(64, 4, 10, '2026-08-01', '2026-08-31', 0.00, 'abierto', NULL, 0, 0),
+(65, 4, 11, '2026-09-01', '2026-09-30', 0.00, 'abierto', NULL, 0, 0),
+(66, 4, 12, '2026-10-01', '2026-10-31', 0.00, 'abierto', NULL, 0, 0),
+(67, 4, 13, '2026-11-01', '2026-11-30', 0.00, 'abierto', NULL, 0, 0),
+(68, 4, 14, '2026-12-01', '2026-12-31', 0.00, 'abierto', NULL, 0, 0),
+(69, 4, 15, '2027-01-01', '2027-01-31', 0.00, 'abierto', NULL, 0, 0),
+(70, 4, 16, '2027-02-01', '2027-02-28', 0.00, 'abierto', NULL, 0, 0),
+(71, 4, 17, '2027-03-01', '2027-03-31', 0.00, 'abierto', NULL, 0, 0),
+(72, 4, 18, '2027-04-01', '2027-04-30', 0.00, 'abierto', NULL, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -289,6 +348,37 @@ ALTER TABLE `pagos_contrato`
   ADD KEY `idx_periodo_fecha` (`id_periodo`,`fecha_pago`);
 
 --
+-- Indices de la tabla `pagos_contrato_historial`
+--
+ALTER TABLE `pagos_contrato_historial`
+  ADD PRIMARY KEY (`id_historial`),
+  ADD KEY `fk_pch_periodo` (`id_periodo`),
+  ADD KEY `fk_pch_usuario` (`id_usuario`),
+  ADD KEY `fk_pch_editado` (`editado_por`),
+  ADD KEY `idx_pch_pago` (`id_pago`),
+  ADD KEY `idx_pch_contrato` (`id_contrato`,`id_periodo`);
+
+--
+-- Indices de la tabla `pagos_diarios_contrato`
+--
+ALTER TABLE `pagos_diarios_contrato`
+  ADD PRIMARY KEY (`id_pago_diario`),
+  ADD UNIQUE KEY `uq_pdc_periodo_fecha` (`id_periodo`,`fecha`),
+  ADD KEY `fk_pdc_usuario` (`id_usuario_registra`),
+  ADD KEY `idx_pdc_contrato` (`id_contrato`),
+  ADD KEY `idx_pdc_periodo` (`id_periodo`),
+  ADD KEY `idx_pdc_fecha` (`fecha`);
+
+--
+-- Indices de la tabla `pago_contrato_asignacion_dias`
+--
+ALTER TABLE `pago_contrato_asignacion_dias`
+  ADD PRIMARY KEY (`id_asignacion`),
+  ADD UNIQUE KEY `uq_pcad` (`id_pago`,`id_pago_diario`),
+  ADD KEY `idx_pcad_pago` (`id_pago`),
+  ADD KEY `idx_pcad_pago_diario` (`id_pago_diario`);
+
+--
 -- Indices de la tabla `periodos_contrato`
 --
 ALTER TABLE `periodos_contrato`
@@ -340,7 +430,25 @@ ALTER TABLE `motos`
 -- AUTO_INCREMENT de la tabla `pagos_contrato`
 --
 ALTER TABLE `pagos_contrato`
-  MODIFY `id_pago` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id_pago` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT de la tabla `pagos_contrato_historial`
+--
+ALTER TABLE `pagos_contrato_historial`
+  MODIFY `id_historial` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `pagos_diarios_contrato`
+--
+ALTER TABLE `pagos_diarios_contrato`
+  MODIFY `id_pago_diario` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `pago_contrato_asignacion_dias`
+--
+ALTER TABLE `pago_contrato_asignacion_dias`
+  MODIFY `id_asignacion` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `periodos_contrato`
@@ -385,6 +493,31 @@ ALTER TABLE `pagos_contrato`
   ADD CONSTRAINT `pagos_contrato_ibfk_1` FOREIGN KEY (`id_contrato`) REFERENCES `contratos` (`id_contrato`),
   ADD CONSTRAINT `pagos_contrato_ibfk_2` FOREIGN KEY (`id_periodo`) REFERENCES `periodos_contrato` (`id_periodo`),
   ADD CONSTRAINT `pagos_contrato_ibfk_3` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`);
+
+--
+-- Filtros para la tabla `pagos_contrato_historial`
+--
+ALTER TABLE `pagos_contrato_historial`
+  ADD CONSTRAINT `fk_pch_contrato` FOREIGN KEY (`id_contrato`) REFERENCES `contratos` (`id_contrato`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pch_editado` FOREIGN KEY (`editado_por`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pch_pago` FOREIGN KEY (`id_pago`) REFERENCES `pagos_contrato` (`id_pago`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pch_periodo` FOREIGN KEY (`id_periodo`) REFERENCES `periodos_contrato` (`id_periodo`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pch_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `pagos_diarios_contrato`
+--
+ALTER TABLE `pagos_diarios_contrato`
+  ADD CONSTRAINT `fk_pdc_contrato` FOREIGN KEY (`id_contrato`) REFERENCES `contratos` (`id_contrato`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pdc_periodo` FOREIGN KEY (`id_periodo`) REFERENCES `periodos_contrato` (`id_periodo`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pdc_usuario` FOREIGN KEY (`id_usuario_registra`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `pago_contrato_asignacion_dias`
+--
+ALTER TABLE `pago_contrato_asignacion_dias`
+  ADD CONSTRAINT `fk_pcad_pago` FOREIGN KEY (`id_pago`) REFERENCES `pagos_contrato` (`id_pago`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pcad_pago_diario` FOREIGN KEY (`id_pago_diario`) REFERENCES `pagos_diarios_contrato` (`id_pago_diario`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `periodos_contrato`
