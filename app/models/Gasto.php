@@ -73,4 +73,39 @@ class Gasto extends BaseModel {
         $stmt->execute();
         return (float)($stmt->fetchColumn() ?? 0.00);
     }
+
+    /**
+     * Obtiene el total de gastos del mes actual
+     * @return float
+     */
+    public function getTotalGastosMes(): float {
+        $sql = "
+            SELECT SUM(monto)
+            FROM {$this->table}
+            WHERE MONTH(fecha_gasto) = MONTH(CURDATE())
+            AND YEAR(fecha_gasto) = YEAR(CURDATE())
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return (float)($stmt->fetchColumn() ?? 0.00);
+    }
+
+    /**
+     * Obtiene gastos de los últimos 6 meses
+     * @return array
+     */
+    public function getGastosUltimos6Meses(): array {
+        $sql = "
+            SELECT
+                DATE_FORMAT(fecha_gasto, '%Y-%m') as mes,
+                SUM(monto) as total_gastos
+            FROM {$this->table}
+            WHERE fecha_gasto >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            GROUP BY DATE_FORMAT(fecha_gasto, '%Y-%m')
+            ORDER BY mes ASC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

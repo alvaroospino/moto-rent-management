@@ -22,4 +22,12 @@ class Cliente extends BaseModel {
         $stmt = $this->db->query("SELECT id_cliente, nombre_completo, identificacion FROM {$this->table} ORDER BY nombre_completo ASC");
         return $stmt->fetchAll();
     }
+
+    // Método para contar clientes con contratos activos
+    public function getClientesConContratosActivos() {
+        $stmt = $this->db->prepare("SELECT COUNT(DISTINCT c.id_cliente) as total FROM {$this->table} c JOIN contratos co ON c.id_cliente = co.id_cliente WHERE co.estado = 'activo'");
+        $stmt->execute();
+        return $stmt->fetch()['total'];
+    }
+
 }

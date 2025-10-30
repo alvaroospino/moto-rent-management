@@ -40,6 +40,9 @@ $app->get('/login', 'AuthController@login');
 $app->post('/authenticate', 'AuthController@authenticate');
 $app->get('/logout', 'AuthController@logout');
 
+// Rutas del Dashboard
+$app->post('/dashboard/pago-rapido', 'DashboardController@pagoRapido');
+
 // Rutas de Activos (Módulo 2)
 $app->get('/motos', 'MotoController@index');
 $app->get('/motos/create', 'MotoController@create');
@@ -67,6 +70,10 @@ $app->post('/contratos/(\d+)/cerrar-periodo/(\d+)', 'ContratoController@cerrarPe
 $app->get('/pagos/contrato/(\d+)', 'PagoController@create');
 $app->post('/pagos/store', 'PagoController@registrarPago');
 $app->post('/prestamos/store', 'PagoController@registrarPrestamo');
+$app->post('/pagos/marcar-no-pago', 'PagoController@marcarNoPagoDia');
+$app->get('/pagos/edit/(\d+)', 'PagoController@edit');
+$app->post('/pagos/update/(\d+)', 'PagoController@update');
+$app->post('/pagos/delete/(\d+)', 'PagoController@delete');
 
 // Rutas de Gastos Operacionales (Módulo 5 - NUEVAS)
 $app->get('/gastos', 'GastoController@index');

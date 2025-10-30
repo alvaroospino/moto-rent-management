@@ -702,8 +702,167 @@
                             <span class="mx-2">•</span>
                             <i class="fas fa-hourglass-half mr-1"></i>
                             <?= $contrato['plazo_meses'] ?? 0 ?> meses
+    </div>
+</div>
+
+<!-- Modal Historial Completo -->
+<div id="historialModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">
+                    <i class="fas fa-history mr-2 text-indigo-600"></i>
+                    Historial Completo de Periodos
+                </h3>
+                <button onclick="closeHistorialModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 max-h-96 overflow-y-auto">
+                <?php if (!empty($historialPeriodos)): ?>
+                    <?php foreach ($historialPeriodos as $historial): ?>
+                        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="badge-small badge-blue">
+                                        <i class="fas fa-hashtag"></i>
+                                        <?= htmlspecialchars($historial['periodo']['numero_periodo']) ?>
+                                    </span>
+                                    <span class="badge-small
+                                        <?php
+                                        switch($historial['periodo']['estado_periodo']) {
+                                            case 'abierto':
+                                                echo 'badge-green';
+                                                break;
+                                            case 'cerrado':
+                                                echo 'badge-blue';
+                                                break;
+                                            default:
+                                                echo 'badge-blue';
+                                        }
+                                        ?>">
+                                        <i class="fas fa-circle"></i>
+                                        <?= ucfirst(htmlspecialchars($historial['periodo']['estado_periodo'])) ?>
+                                    </span>
+                                    <span class="text-sm text-gray-600">
+                                        <?= date('d/m/Y', strtotime($historial['periodo']['fecha_inicio_periodo'])) ?> -
+                                        <?= date('d/m/Y', strtotime($historial['periodo']['fecha_fin_periodo'])) ?>
+                                    </span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        Total Pagado: $<?= number_format($historial['metricas']['total_pagado'], 0, ',', '.') ?>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div class="bg-white border rounded p-2 text-center">
+                                    <div class="text-xs text-gray-500">Días Hábiles</div>
+                                    <div class="font-bold text-gray-800 text-lg"><?= $historial['metricas']['habiles'] ?></div>
+                                </div>
+                                <div class="bg-green-50 border border-green-200 rounded p-2 text-center">
+                                    <div class="text-xs text-green-700">Pagados</div>
+                                    <div class="font-bold text-green-800 text-lg"><?= $historial['metricas']['pagados'] ?></div>
+                                </div>
+                                <div class="bg-amber-50 border border-amber-200 rounded p-2 text-center">
+                                    <div class="text-xs text-amber-700">Pendientes</div>
+                                    <div class="font-bold text-amber-800 text-lg"><?= $historial['metricas']['pendientes'] ?></div>
+                                </div>
+                                <div class="bg-red-50 border border-red-200 rounded p-2 text-center">
+                                    <div class="text-xs text-red-700">No Pago</div>
+                                    <div class="font-bold text-red-800 text-lg"><?= $historial['metricas']['nopago'] ?></div>
+                                </div>
+                            </div>
+
+                            <div class="table-container">
+                                <table class="compact-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Día</th>
+                                            <th>Estado</th>
+                                            <th>Monto</th>
+                                            <th>Observación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($historial['dias'] as $dia): ?>
+                                            <tr>
+                                                <td class="text-xs"><?= date('d/m/Y', strtotime($dia['fecha'])) ?></td>
+                                                <td class="text-xs">
+                                                    <?php
+                                                    $diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                                                    echo $diasSemana[date('w', strtotime($dia['fecha']))];
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <span class="badge-small <?php
+                                                        switch($dia['estado_dia']) {
+                                                            case 'pagado':
+                                                                echo 'badge-green';
+                                                                break;
+                                                            case 'no_pago':
+                                                                echo 'badge-amber';
+                                                                break;
+                                                            default:
+                                                                echo '';
+                                                        }
+                                                        ?>">
+                                                        <i class="fas fa-circle"></i>
+                                                        <?= htmlspecialchars($dia['estado_dia']) ?>
+                                                    </span>
+                                                </td>
+                                                <td class="text-xs">$<?= number_format($dia['monto_pagado'], 0, ',', '.') ?></td>
+                                                <td class="text-xs text-gray-600"><?= htmlspecialchars($dia['observacion'] ?? '') ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fas fa-inbox text-3xl mb-2 block"></i>
+                        <p class="text-sm font-medium">No hay historial disponible</p>
                     </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="flex justify-end mt-4">
+                <button onclick="closeHistorialModal()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openHistorialModal() {
+    document.getElementById('historialModal').classList.remove('hidden');
+}
+
+function closeHistorialModal() {
+    document.getElementById('historialModal').classList.add('hidden');
+}
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('historialModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeHistorialModal();
+    }
+});
+</script>
+
+<script>
+function toggleNoPagoForm() {
+    const form = document.getElementById('noPagoForm');
+    form.classList.toggle('hidden');
+}
+</script>
                 </div>
                 <div class="header-compact-actions">
                     <a href="<?= BASE_URL ?>contratos" class="btn-back">
@@ -903,6 +1062,17 @@
                     </div>
                 </div>
 
+                <?php
+                // Determinar periodo actual de la lista disponible
+                $periodoActualVista = null;
+                if (!empty($periodos)) {
+                    foreach ($periodos as $p) {
+                        if (($p['estado_periodo'] ?? '') === 'abierto') { $periodoActualVista = $p; break; }
+                    }
+                    if (!$periodoActualVista) { $periodoActualVista = $periodos[0]; }
+                }
+                ?>
+
                 <!-- Control Diario del Periodo Actual -->
                 <div class="section-card mb-6">
                     <div class="section-card-header">
@@ -910,20 +1080,38 @@
                             <i class="fas fa-calendar-day"></i>
                         </div>
                         <h2>Control Diario (Periodo Actual)</h2>
+                        <?php if ($periodoActualVista): ?>
+                            <!-- Botón para marcar día como no pago -->
+                            <button onclick="toggleNoPagoForm()" class="ml-auto bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded text-sm">
+                                <i class="fas fa-ban mr-1"></i>Marcar Día No Pago
+                            </button>
+                        <?php endif; ?>
                     </div>
                     <div class="section-card-body">
-                        <?php
-                        // Determinar periodo actual de la lista disponible
-                        $periodoActualVista = null;
-                        if (!empty($periodos)) {
-                            foreach ($periodos as $p) {
-                                if (($p['estado_periodo'] ?? '') === 'abierto') { $periodoActualVista = $p; break; }
-                            }
-                            if (!$periodoActualVista) { $periodoActualVista = $periodos[0]; }
-                        }
-                        ?>
 
                         <?php if ($periodoActualVista): ?>
+                            <!-- Formulario oculto para marcar día como no pago -->
+                            <div id="noPagoForm" class="hidden mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                <h3 class="text-sm font-medium text-amber-800 mb-2">Marcar Día como No Pago</h3>
+                                <form method="POST" action="<?= BASE_URL ?>pagos/marcar-no-pago" class="flex gap-2 items-end">
+                                    <input type="hidden" name="id_contrato" value="<?= $contrato['id_contrato'] ?>">
+                                    <input type="hidden" name="id_periodo" value="<?= $periodoActualVista['id_periodo'] ?>">
+                                    <div class="flex-1">
+                                        <label for="fecha_no_pago" class="block text-xs font-medium text-gray-700 mb-1">Fecha</label>
+                                        <input type="date" id="fecha_no_pago" name="fecha" min="<?= $periodoActualVista['fecha_inicio_periodo'] ?>" max="<?= $periodoActualVista['fecha_fin_periodo'] ?>" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" required>
+                                    </div>
+                                    <div class="flex-1">
+                                        <label for="observacion_no_pago" class="block text-xs font-medium text-gray-700 mb-1">Observación</label>
+                                        <input type="text" id="observacion_no_pago" name="observacion" placeholder="Observación" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" maxlength="100">
+                                    </div>
+                                    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded text-sm">
+                                        <i class="fas fa-save mr-1"></i>Marcar
+                                    </button>
+                                    <button type="button" onclick="toggleNoPagoForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm">
+                                        <i class="fas fa-times mr-1"></i>Cancelar
+                                    </button>
+                                </form>
+                            </div>
                             <?php
                             // Cargar días del periodo (requiere PeriodoContrato::getDiasPeriodo)
                             $diasPeriodo = PeriodoContrato::getDiasPeriodo($contrato['id_contrato'], $periodoActualVista['id_periodo']);
@@ -967,7 +1155,6 @@
                                             <th>Estado</th>
                                             <th>Monto Día</th>
                                             <th>Obs.</th>
-                                            <th class="text-right">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -976,7 +1163,7 @@
                                             <tr>
                                                 <td><?= date('d/m/Y', strtotime($dia['fecha'])) ?></td>
                                                 <td>
-                                                    <span class="badge-small <?php 
+                                                    <span class="badge-small <?php
                                                         echo $dia['estado_dia']==='pagado'?'badge-green':($dia['estado_dia']==='no_pago'?'badge-amber':''); ?>">
                                                         <i class="fas fa-circle"></i>
                                                         <?= htmlspecialchars($dia['estado_dia']) ?>
@@ -984,21 +1171,6 @@
                                                 </td>
                                                 <td>$<?= number_format($dia['monto_pagado'], 0, ',', '.') ?></td>
                                                 <td class="text-xs text-gray-600"><?= htmlspecialchars($dia['observacion'] ?? '') ?></td>
-                                                <td class="text-right">
-                                                    <div class="flex gap-2 justify-end">
-                                                        <a class="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded" href="<?= BASE_URL ?>pagos/contrato/<?= $contrato['id_contrato'] ?>?fecha=<?= htmlspecialchars($dia['fecha']) ?>">
-                                                            <i class="fas fa-plus mr-1"></i>Pago
-                                                        </a>
-                                                        <form method="POST" action="<?= BASE_URL ?>pagos/marcar-no-pago">
-                                                            <input type="hidden" name="id_contrato" value="<?= $contrato['id_contrato'] ?>">
-                                                            <input type="hidden" name="id_periodo" value="<?= $periodoActualVista['id_periodo'] ?>">
-                                                            <input type="hidden" name="fecha" value="<?= htmlspecialchars($dia['fecha']) ?>">
-                                                            <button class="text-xs px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded" type="submit" onclick="return confirm('¿Marcar no pago el <?= date('d/m/Y', strtotime($dia['fecha'])) ?>?')">
-                                                                <i class="fas fa-ban mr-1"></i>No pago
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -1022,6 +1194,9 @@
                                 <i class="fas fa-calendar-check"></i>
                             </div>
                             <h2>Periodos del Contrato</h2>
+                            <button onclick="openHistorialModal()" class="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-sm">
+                                <i class="fas fa-history mr-1"></i>Ver Historial
+                            </button>
                         </div>
                         <div class="section-card-body">
                             <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -1116,6 +1291,7 @@
                                             <th>Periodo</th>
                                             <th>Monto</th>
                                             <th>Concepto</th>
+                                            <th class="text-right">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1142,11 +1318,23 @@
                                                     <td class="text-xs text-gray-600">
                                                         <?= htmlspecialchars($pago['concepto'] ?? 'Pago diario') ?>
                                                     </td>
+                                                    <td class="text-right">
+                                                        <div class="flex gap-1 justify-end">
+                                                            <a href="<?= BASE_URL ?>pagos/edit/<?= $pago['id_pago'] ?>" class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors" title="Editar pago">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <form method="POST" action="<?= BASE_URL ?>pagos/delete/<?= $pago['id_pago'] ?>" class="inline" onsubmit="return confirm('¿Está seguro de eliminar este pago? Esta acción no se puede deshacer.')">
+                                                                <button type="submit" class="text-xs px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition-colors" title="Eliminar pago">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="4" class="text-center py-6 text-gray-400">
+                                                <td colspan="5" class="text-center py-6 text-gray-400">
                                                     <i class="fas fa-receipt text-2xl mb-2 block"></i>
                                                     No hay pagos registrados
                                                 </td>

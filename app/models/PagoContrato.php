@@ -18,29 +18,61 @@ class PagoContrato extends BaseModel {
     ];
 
     /**
-     * Actualiza el control diario SOLO para la fecha del pago.
-     * No distribuye a otros días.
+     * Reflejar pago en control diario - Inserta o actualiza el día específico del pago
      */
-    public static function reflejarEnControlDiario($idContrato, $idPeriodo, $fechaPago, $montoDelta) {
+    public static function reflejarEnControlDiario($idContrato, $idPeriodo, $fecha, $montoPago, $idUsuario) {
         $db = Database::getInstance()->getConnection();
 
-        // Asegurar que el día existe en pagos_diarios_contrato (en caso de no haberse generado aún)
-        $stmt = $db->prepare("INSERT IGNORE INTO pagos_diarios_contrato (id_contrato, id_periodo, fecha, es_domingo, estado_dia, monto_pagado) VALUES (:id_contrato, :id_periodo, :fecha, IF(WEEKDAY(:fecha2)=6,1,0), 'pendiente', 0.00)");
-        $stmt->execute([
-            'id_contrato' => $idContrato,
-            'id_periodo' => $idPeriodo,
-            'fecha' => $fechaPago,
-            'fecha2' => $fechaPago,
+        // Primero obtener el monto actual del día
+        $stmt = $db->prepare("SELECT monto_pagado FROM pagos_diarios_contrato WHERE id_contrato = :id_contrato AND id_periodo = :id_periodo AND fecha = :fecha");
+        $stmt->execute([':id_contrato' => $idContrato, ':id_periodo' => $idPeriodo, ':fecha' => $fecha]);
+        $current = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $currentMonto = $current ? (float)$current['monto_pagado'] : 0.00;
+        $newMonto = $currentMonto + $montoPago;
+
+        // Determinar nuevo estado basado en el monto
+        $newEstado = ($newMonto > 0) ? 'pagado' : 'pendiente';
+
+        // Intentar actualizar primero
+        $updateStmt = $db->prepare("
+            UPDATE pagos_diarios_contrato
+            SET monto_pagado = :new_monto,
+                estado_dia = :new_estado,
+                id_usuario_registra = :id_usuario,
+                updated_at = NOW()
+            WHERE id_contrato = :id_contrato AND id_periodo = :id_periodo AND fecha = :fecha
+        ");
+
+        $result = $updateStmt->execute([
+            ':new_monto' => $newMonto,
+            ':new_estado' => $newEstado,
+            ':id_usuario' => $idUsuario,
+            ':id_contrato' => $idContrato,
+            ':id_periodo' => $idPeriodo,
+            ':fecha' => $fecha
         ]);
 
-        // Actualizar monto y estado del día
-        $upd = $db->prepare("UPDATE pagos_diarios_contrato SET monto_pagado = GREATEST(0, monto_pagado + :delta), estado_dia = CASE WHEN (monto_pagado + :delta) > 0 THEN 'pagado' ELSE 'pendiente' END WHERE id_contrato = :id_contrato AND id_periodo = :id_periodo AND fecha = :fecha");
-        $upd->execute([
-            'delta' => $montoDelta,
-            'id_contrato' => $idContrato,
-            'id_periodo' => $idPeriodo,
-            'fecha' => $fechaPago,
-        ]);
+        // Si no se actualizó ninguna fila, insertar nuevo registro
+        if ($result && $updateStmt->rowCount() == 0) {
+            $insertStmt = $db->prepare("
+                INSERT INTO pagos_diarios_contrato
+                (id_contrato, id_periodo, fecha, es_domingo, estado_dia, monto_pagado, id_usuario_registra, created_at, updated_at)
+                VALUES (:id_contrato, :id_periodo, :fecha, :es_domingo, :estado_dia, :monto_pagado, :id_usuario, NOW(), NOW())
+            ");
+            $esDomingo = (date('w', strtotime($fecha)) == 0) ? 1 : 0;
+            $insertStmt->execute([
+                ':id_contrato' => $idContrato,
+                ':id_periodo' => $idPeriodo,
+                ':fecha' => $fecha,
+                ':es_domingo' => $esDomingo,
+                ':estado_dia' => $newEstado,
+                ':monto_pagado' => $newMonto,
+                ':id_usuario' => $idUsuario
+            ]);
+        }
+
+        return $result;
     }
 
     /**
@@ -71,7 +103,7 @@ class PagoContrato extends BaseModel {
         $periodoModel->actualizarCuotaAcumulada($data['id_periodo'], $data['monto_pago']);
 
         // Reflejar SOLO el día del pago en control diario (no distribuir)
-        self::reflejarEnControlDiario($data['id_contrato'], $data['id_periodo'], $data['fecha_pago'], $data['monto_pago']);
+        self::reflejarEnControlDiario($data['id_contrato'], $data['id_periodo'], $data['fecha_pago'], $data['monto_pago'], $data['id_usuario']);
 
         return $pagoId;
     }
@@ -139,5 +171,61 @@ class PagoContrato extends BaseModel {
         $stmt->execute(['id_contrato' => $idContrato]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['total'] ?? 0;
+    }
+
+    /**
+     * Actualizar un pago
+     */
+    public function updatePago($idPago, $data) {
+        $pago = $this->find($idPago);
+        if (!$pago) {
+            throw new Exception('Pago no encontrado');
+        }
+
+        // Calcular diferencia de monto para ajustar control diario
+        $diferenciaMonto = $data['monto_pago'] - $pago['monto_pago'];
+
+        // Actualizar el pago
+        $this->update($idPago, $data);
+
+        // Si cambió el monto, ajustar el control diario
+        if ($diferenciaMonto != 0) {
+            // Restar el monto anterior del día
+            self::reflejarEnControlDiario($pago['id_contrato'], $pago['id_periodo'], $pago['fecha_pago'], -$pago['monto_pago'], $data['id_usuario'] ?? $pago['id_usuario']);
+            // Agregar el nuevo monto al día
+            self::reflejarEnControlDiario($pago['id_contrato'], $pago['id_periodo'], $data['fecha_pago'] ?? $pago['fecha_pago'], $data['monto_pago'], $data['id_usuario'] ?? $pago['id_usuario']);
+        } elseif (($data['fecha_pago'] ?? $pago['fecha_pago']) != $pago['fecha_pago']) {
+            // Si cambió la fecha, mover el monto al nuevo día
+            self::reflejarEnControlDiario($pago['id_contrato'], $pago['id_periodo'], $pago['fecha_pago'], -$pago['monto_pago'], $data['id_usuario'] ?? $pago['id_usuario']);
+            self::reflejarEnControlDiario($pago['id_contrato'], $pago['id_periodo'], $data['fecha_pago'], $data['monto_pago'], $data['id_usuario'] ?? $pago['id_usuario']);
+        }
+
+        // Actualizar cuota acumulada si cambió el monto
+        if ($diferenciaMonto != 0) {
+            $periodoModel = new PeriodoContrato();
+            $periodoModel->actualizarCuotaAcumulada($pago['id_periodo'], $diferenciaMonto);
+        }
+
+        return true;
+    }
+
+    /**
+     * Eliminar un pago
+     */
+    public function deletePago($idPago) {
+        $pago = $this->find($idPago);
+        if (!$pago) {
+            throw new Exception('Pago no encontrado');
+        }
+
+        // Revertir el reflejo en control diario
+        self::reflejarEnControlDiario($pago['id_contrato'], $pago['id_periodo'], $pago['fecha_pago'], -$pago['monto_pago'], $pago['id_usuario']);
+
+        // Actualizar cuota acumulada
+        $periodoModel = new PeriodoContrato();
+        $periodoModel->actualizarCuotaAcumulada($pago['id_periodo'], -$pago['monto_pago']);
+
+        // Eliminar el pago
+        return $this->delete($idPago);
     }
 }

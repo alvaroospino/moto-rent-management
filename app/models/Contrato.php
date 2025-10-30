@@ -237,4 +237,150 @@ class Contrato extends BaseModel {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ? $result['total'] ?? 0 : 0;
     }
+
+    /**
+     * Obtener contratos próximos a vencer (próximos 7 días)
+     */
+    public static function getContratosProximosVencer() {
+        $contrato = new self();
+        $sql = "
+            SELECT c.*, cl.nombre_completo, m.placa, m.marca,
+                   DATEDIFF(p.fecha_fin_periodo, CURDATE()) as dias_restantes
+            FROM contratos c
+            JOIN clientes cl ON c.id_cliente = cl.id_cliente
+            JOIN motos m ON c.id_moto = m.id_moto
+            JOIN periodos_contrato p ON c.id_contrato = p.id_contrato
+            WHERE c.estado = 'activo'
+            AND p.estado_periodo = 'abierto'
+            AND DATEDIFF(p.fecha_fin_periodo, CURDATE()) BETWEEN 0 AND 7
+            ORDER BY p.fecha_fin_periodo ASC
+        ";
+        $stmt = $contrato->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtener utilidad neta del mes actual (ingresos - gastos)
+     */
+    public static function getUtilidadNetaMes() {
+        $contrato = new self();
+        $gastoModel = new Gasto();
+
+        // Ingresos del mes
+        $ingresos = self::getIngresoMes();
+
+        // Gastos del mes
+        $gastos = $gastoModel->getTotalGastosMes();
+
+        return $ingresos - $gastos;
+    }
+
+    /**
+     * Obtener ingresos del mes actual
+     */
+    public static function getIngresoMes() {
+        $pagoModel = new PagoContrato();
+        $sql = "SELECT SUM(monto_pago) as total FROM pagos_contrato
+                WHERE MONTH(fecha_pago) = MONTH(CURDATE())
+                AND YEAR(fecha_pago) = YEAR(CURDATE())";
+        $stmt = $pagoModel->db->query($sql);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['total'] ?? 0 : 0;
+    }
+
+    /**
+     * Obtener ingresos de los últimos 6 meses
+     */
+    public static function getIngresosUltimos6Meses() {
+        $contrato = new self();
+        $sql = "
+            SELECT
+                DATE_FORMAT(fecha_pago, '%Y-%m') as mes,
+                SUM(monto_pago) as total_ingresos
+            FROM pagos_contrato
+            WHERE fecha_pago >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            GROUP BY DATE_FORMAT(fecha_pago, '%Y-%m')
+            ORDER BY mes ASC
+        ";
+        $stmt = $contrato->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtener pagos recientes
+     */
+    public static function getPagosRecientes($limit = 10) {
+        $contrato = new self();
+        $sql = "
+            SELECT
+                pc.*,
+                c.nombre_completo,
+                m.placa,
+                DATE_FORMAT(pc.fecha_pago, '%d/%m/%Y') as fecha_formateada
+            FROM pagos_contrato pc
+            JOIN contratos co ON pc.id_contrato = co.id_contrato
+            JOIN clientes c ON co.id_cliente = c.id_cliente
+            JOIN motos m ON co.id_moto = m.id_moto
+            ORDER BY pc.fecha_pago DESC
+            LIMIT :limit
+        ";
+        $stmt = $contrato->db->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtener rentabilidad mensual (ingresos vs gastos)
+     */
+    public static function getRentabilidadMensual() {
+        $contrato = new self();
+        $gastoModel = new Gasto();
+
+        // Generar los últimos 6 meses
+        $meses = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $meses[] = date('Y-m', strtotime("-$i months"));
+        }
+
+        $sql = "
+            SELECT
+                DATE_FORMAT(fecha_pago, '%Y-%m') as mes,
+                SUM(monto_pago) as ingresos
+            FROM pagos_contrato
+            WHERE fecha_pago >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            GROUP BY DATE_FORMAT(fecha_pago, '%Y-%m')
+            ORDER BY mes ASC
+        ";
+        $stmt = $contrato->db->query($sql);
+        $ingresos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $gastos = $gastoModel->getGastosUltimos6Meses();
+
+        $rentabilidad = [];
+        foreach ($meses as $mes) {
+            $ingreso_mes = 0;
+            foreach ($ingresos as $ingreso) {
+                if ($ingreso['mes'] === $mes) {
+                    $ingreso_mes = $ingreso['ingresos'];
+                    break;
+                }
+            }
+            $gasto_mes = 0;
+            foreach ($gastos as $gasto) {
+                if ($gasto['mes'] === $mes) {
+                    $gasto_mes = $gasto['total_gastos'];
+                    break;
+                }
+            }
+            $rentabilidad[] = [
+                'mes' => $mes,
+                'ingresos' => $ingreso_mes,
+                'gastos' => $gasto_mes,
+                'utilidad' => $ingreso_mes - $gasto_mes
+            ];
+        }
+
+        return $rentabilidad;
+    }
 }

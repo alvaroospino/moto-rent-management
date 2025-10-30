@@ -159,6 +159,34 @@ class ContratoController {
             $periodos[] = $nextPeriod;
         }
 
+        // Preparar datos del historial completo para el modal
+        $historialPeriodos = [];
+        foreach ($allPeriodos as $periodo) {
+            $diasPeriodo = PeriodoContrato::getDiasPeriodo($id, $periodo['id_periodo']);
+            $habiles = 0; $pagados = 0; $pendientes = 0; $nopago = 0; $totalDia = 0;
+            foreach ($diasPeriodo as $d) {
+                if ((int)$d['es_domingo'] === 1) continue;
+                $habiles++;
+                $totalDia += (float)$d['monto_pagado'];
+                switch ($d['estado_dia']) {
+                    case 'pagado': $pagados++; break;
+                    case 'no_pago': $nopago++; break;
+                    default: $pendientes++; break;
+                }
+            }
+            $historialPeriodos[] = [
+                'periodo' => $periodo,
+                'dias' => $diasPeriodo,
+                'metricas' => [
+                    'habiles' => $habiles,
+                    'pagados' => $pagados,
+                    'pendientes' => $pendientes,
+                    'nopago' => $nopago,
+                    'total_pagado' => $totalDia
+                ]
+            ];
+        }
+
         // Obtener historial de pagos
         $pagoModel = new PagoContrato();
         $pagos = $pagoModel->getPagosPorContrato($id);
@@ -168,7 +196,7 @@ class ContratoController {
         $pagosRealizadosMes = Contrato::calcularPagosMesActual($id);
 
         // Hacer variables disponibles para la vista
-        extract(compact('contrato', 'cliente', 'moto', 'periodos', 'totalPagado', 'pagos', 'saldoRestante', 'pagosRealizadosMes'));
+        extract(compact('contrato', 'cliente', 'moto', 'periodos', 'totalPagado', 'pagos', 'saldoRestante', 'pagosRealizadosMes', 'historialPeriodos'));
 
         // Carga el layout principal, inyectando la vista específica
         $contentView = __DIR__ . '/../views/contratos/detail.php';

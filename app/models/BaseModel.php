@@ -41,20 +41,30 @@ class BaseModel {
 
     // Método genérico de inserción (Necesario para Moto y Cliente)
     public function create(array $data) {
-        $fields = array_keys($data);
-        $columns = implode(', ', $fields);
-        $placeholders = ':' . implode(', :', $fields);
+    $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        $sql = "INSERT INTO {$this->table} ({$columns}) VALUES ({$placeholders})";
-        $stmt = $this->db->prepare($sql);
+    // Limpia los datos: quita solo campos null, permite strings vacías
+    $data = array_filter($data, function ($v) {
+        return $v !== null;
+    });
 
-        foreach ($data as $key => &$value) {
-            $stmt->bindParam(":$key", $value);
-        }
 
-        $stmt->execute();
-        return $this->db->lastInsertId();
+    $fields = array_keys($data);
+    $columns = implode(', ', $fields);
+    $placeholders = implode(', ', array_map(fn($f) => ":$f", $fields));
+
+    $sql = "INSERT INTO {$this->table} ({$columns}) VALUES ({$placeholders})";
+
+    $stmt = $this->db->prepare($sql);
+
+    foreach ($data as $key => $value) {
+        $stmt->bindValue(":$key", $value);
     }
+
+    $stmt->execute();
+    return $this->db->lastInsertId();
+}
+
 
     // Método para contar registros con condiciones
     public function count(array $conditions = []) {

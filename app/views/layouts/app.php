@@ -35,6 +35,8 @@ if (!defined('BASE_URL')) {
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/dataTables.tailwindcss.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Global Variables -->
     <script>
         const BASE_URL = '<?= BASE_URL ?>';

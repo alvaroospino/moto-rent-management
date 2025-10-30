@@ -9,37 +9,12 @@ class PeriodoContrato extends BaseModel {
     }
 
     /**
-     * Poblar días hábiles (excluyendo domingos) para un periodo en pagos_diarios_contrato.
-     * No duplica si ya existen (apoya constraint UNIQUE).
+     * Método obsoleto - Los días ahora se generan dinámicamente al registrar pagos o marcar como no pago.
+     * Mantengo la firma por compatibilidad, pero no hace nada.
      */
     public static function poblarDiasHabilesPeriodo($idContrato, $idPeriodo, $fechaInicio, $fechaFin) {
-        $db = Database::getInstance()->getConnection();
-        $fecha = strtotime($fechaInicio);
-        $fin = strtotime($fechaFin);
-
-        $insertStmt = $db->prepare("INSERT IGNORE INTO pagos_diarios_contrato (id_contrato, id_periodo, fecha, es_domingo, estado_dia) VALUES (:id_contrato, :id_periodo, :fecha, :es_domingo, :estado_dia)");
-
-        while ($fecha <= $fin) {
-            $isSunday = (date('w', $fecha) == 0) ? 1 : 0;
-            $estado = $isSunday ? 'pendiente' : 'pendiente';
-            // Insertar todos los días, marcaremos domingos con es_domingo=1 para poder ocultarlos en UI.
-            $insertStmt->execute([
-                'id_contrato' => $idContrato,
-                'id_periodo' => $idPeriodo,
-                'fecha' => date('Y-m-d', $fecha),
-                'es_domingo' => $isSunday,
-                'estado_dia' => 'pendiente'
-            ]);
-            $fecha = strtotime('+1 day', $fecha);
-        }
-
-        // Marcar bandera en periodo si la columna existe (ignorar error si no existe)
-        try {
-            $upd = $db->prepare("UPDATE periodos_contrato SET dias_generados = 1 WHERE id_periodo = :id");
-            $upd->execute([':id' => $idPeriodo]);
-        } catch (Exception $e) {
-            // columna opcional
-        }
+        // No hacer nada - lógica simplificada
+        return true;
     }
 
     protected $fillable = [
