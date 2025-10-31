@@ -24,6 +24,8 @@ if (!defined('BASE_URL')) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Alquiler - Moto Rent</title>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="<?= BASE_URL ?>manifest.json">
     <!-- Tailwind CDN (rápido para desarrollo). Mantengo el enlace local como fallback si existe -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="/assets/css/tailwind.css" rel="stylesheet">
@@ -79,7 +81,7 @@ if (!defined('BASE_URL')) {
 
     </style>
     <div class="flex h-screen">
-        
+
         <aside id="sidebar" class="fixed md:static z-30 inset-y-0 left-0 w-64 md:w-64 transform -translate-x-full md:translate-x-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col transition-all duration-300 ease-in-out overflow-hidden shadow-2xl">
             <div class="flex items-center justify-between p-6 border-b border-gray-700/50 sidebar-header bg-gradient-to-r from-indigo-600/20 to-purple-600/20 backdrop-blur-sm">
                 <div class="flex items-center space-x-3">
@@ -161,7 +163,7 @@ if (!defined('BASE_URL')) {
                 </ul>
             </nav>
         </aside>
-        
+
         <div id="mainWrapper" class="main-content flex-1 flex flex-col overflow-hidden transition-all duration-200 ease-in-out">
             <header class="flex items-center justify-between gap-4 p-4 bg-gradient-to-r from-white to-gray-50 shadow-lg sticky top-0 z-20 border-b border-gray-200">
                 <div class="flex items-center gap-3">
@@ -228,10 +230,10 @@ if (!defined('BASE_URL')) {
                     </div>
                 </div>
             </header>
-            
+
             <main class="flex-1 overflow-x-hidden overflow-y-auto">
                 <div class="page-container px-3 md:px-4 lg:px-6 py-4 md:py-6">
-                    <?php 
+                    <?php
                     if (isset($contentView)) {
                         require_once $contentView;
                     } else {
@@ -361,6 +363,19 @@ if (!defined('BASE_URL')) {
                 userMenu.classList.add('hidden');
             }
         });
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('<?= BASE_URL ?>sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registrado con éxito:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('Error al registrar Service Worker:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
