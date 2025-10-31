@@ -88,5 +88,12 @@ $app->post('/gastos/destroy/(\d+)', 'GastoController@destroy');
 $app->get('/reportes', 'ReporteController@index');
 // $app->get('/reportes/export', 'ReporteController@export'); // Ruta para exportación
 
+// Rutas de Notificaciones
+$app->get('/api/notifications/count', 'NotificacionController@getUnreadCount');
+$app->get('/api/notifications', 'NotificacionController@getNotifications');
+$app->post('/api/notifications/mark-read', 'NotificacionController@markAsRead');
+$app->post('/api/notifications/mark-all-read', 'NotificacionController@markAllAsRead');
+$app->post('/api/notifications/create', 'NotificacionController@create');
+
 // 3. Despachar la solicitud
 $app->run();

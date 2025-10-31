@@ -1,32 +1,25 @@
-# TODO: Mejorar Diseño de Página de Clientes (index.php)
+# TODO: Mejorar Menú Hamburguesa
 
 ## Información Recopilada
-- Página actual de clientes/index.php: Básica tabla con nombre, identificación, teléfono, dirección y acciones.
-- Página de motos/index.php: Incluye KPIs, acciones rápidas, filtros, tabla mejorada con iconos, estados coloreados, estado vacío mejorado, responsivo.
-- Modelo Cliente: Campos básicos (nombre_completo, identificacion, telefono, direccion). No hay campo de estado, pero se puede agregar lógica para KPIs basados en contratos.
-- Controlador ClienteController: Maneja CRUD básico.
+- El layout principal está en `app/views/layouts/app.php`.
+- El botón hamburguesa para móvil es un simple ícono de barras.
+- Hay un botón de toggle para PC que colapsa/expande el sidebar.
+- Se necesita un diseño más elaborado con animaciones interactivas para ambos botones y el contenido del menú.
 
-## Plan de Mejora
-- Agregar KPIs específicos para clientes: Total Clientes, Clientes con Teléfono Registrado, Clientes con Dirección Registrada, Clientes con Contratos Activos (si es posible calcular).
-- Agregar sección de Acciones Rápidas: Registrar Nuevo Cliente, Crear Nuevo Contrato.
-- Agregar filtros de búsqueda: Por nombre completo o identificación.
-- Mejorar la tabla: Agregar iconos de usuario, colores para estados (si aplicable), responsiva.
-- Mejorar estado vacío: Mensaje específico con icono.
-- Agregar JavaScript para filtros de búsqueda.
-- Mantener diseño responsivo y consistente con motos/index.php.
+## Plan
+- Mejorar el botón hamburguesa para móvil (`openSidebar`) con un diseño animado similar al de `temp_hamburger.html`.
+- Mejorar el botón de toggle para PC (`toggleDesktopSidebar`) con animaciones y mejor diseño.
+- Mejorar el contenido del menú hamburguesa (sidebar) con mejor diseño, animaciones y estilos atractivos.
+- Asegurar que las animaciones sean suaves y responsivas.
 
-## Pasos a Seguir
-- [x] Actualizar app/views/clientes/index.php con KPIs, acciones rápidas, filtros, tabla mejorada y estado vacío.
-- [x] Agregar JavaScript para funcionalidad de búsqueda.
-- [x] Cambiar KPIs a métricas más útiles: Total Clientes, Con Contratos Activos (eliminado Sin Contratos).
-- [x] Agregar métodos en Cliente.php para contar clientes con contratos activos.
-- [ ] Verificar que el diseño sea responsivo y funcional.
-- [ ] Probar la página para asegurar que funcione correctamente.
+## Pasos
+1. Editar `app/views/layouts/app.php` para reemplazar el botón hamburguesa móvil con un diseño animado.
+2. Editar el botón de toggle para PC con mejor diseño y animaciones.
+3. Mejorar el diseño del sidebar: header, enlaces, animaciones de apertura/cierre.
+4. Probar las animaciones en móvil y PC.
 
-## Archivos Dependientes
-- app/views/clientes/index.php (principal).
-- Posiblemente app/controllers/ClienteController.php si se necesita lógica adicional para KPIs (ej. contar contratos por cliente).
-
-## Pasos de Seguimiento
-- Después de editar, probar la página localmente.
-- Si se necesita lógica adicional en el controlador para KPIs, actualizar ClienteController.php.
+## Seguimiento de Progreso
+- [x] Paso 1: Mejorar botón móvil
+- [x] Paso 2: Mejorar botón PC
+- [x] Paso 3: Mejorar contenido del menú hamburguesa
+- [x] Paso 4: Probar y ajustar

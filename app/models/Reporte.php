@@ -17,16 +17,15 @@ class Reporte extends BaseModel {
      * @return array
      */
     public function getUtilidadRealPorMoto(string $fechaInicio, string $fechaFin): array {
-        
-        // Paso 1: Obtener Ingreso Real por Alquiler (EXCLUYE PRÉSTAMOS)
+
+        // Paso 1: Obtener Ingreso Real por Alquiler desde pagos_contrato
         $sqlIngresos = "
-            SELECT 
-                c.id_moto, 
-                SUM(mc.monto) as total_ingreso_alquiler
+            SELECT
+                c.id_moto,
+                SUM(pc.monto_pago) as total_ingreso_alquiler
             FROM contratos c
-            JOIN movimientos_contrato mc ON c.id_contrato = mc.id_contrato
-            WHERE mc.es_abono_ingreso = TRUE 
-              AND mc.fecha_movimiento BETWEEN :f_inicio AND :f_fin
+            JOIN pagos_contrato pc ON c.id_contrato = pc.id_contrato
+            WHERE pc.fecha_pago BETWEEN :f_inicio AND :f_fin
             GROUP BY c.id_moto
         ";
         $stmtIngresos = $this->db->prepare($sqlIngresos);
@@ -35,11 +34,11 @@ class Reporte extends BaseModel {
 
         // Paso 2: Obtener Gastos Operacionales (Asociados directamente a la moto)
         $sqlGastos = "
-            SELECT 
-                id_moto, 
+            SELECT
+                id_moto,
                 SUM(monto) as total_gasto_moto
             FROM gastos_empresa
-            WHERE id_moto IS NOT NULL 
+            WHERE id_moto IS NOT NULL
               AND fecha_gasto BETWEEN :f_inicio AND :f_fin
             GROUP BY id_moto
         ";
@@ -50,7 +49,7 @@ class Reporte extends BaseModel {
         // Paso 3: Obtener Inversión Inicial y datos de la moto
         $sqlMotos = "SELECT id_moto, placa, marca, valor_adquisicion FROM motos";
         $motos = $this->db->query($sqlMotos)->fetchAll();
-        
+
         $reporte = [];
 
         foreach ($motos as $moto) {
@@ -61,7 +60,7 @@ class Reporte extends BaseModel {
 
             // Utilidad Real = Ingreso por Alquiler - Gastos Operativos (del período) - (Amortización de Inversión)
             // Para simplicidad en este alcance, restaremos solo Gastos Operativos y mostraremos la Inversión aparte.
-            
+
             $utilidad_bruta = $ingreso - $gasto;
 
             $reporte[] = [

@@ -19,7 +19,7 @@
 <?php endif; ?>
 
 <!-- KPIs Principales -->
-<div class="grid grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
 
     <div class="bg-white shadow-xl rounded-lg p-4 md:p-6 flex items-center justify-between border-l-4 border-indigo-500">
         <div>
@@ -57,7 +57,7 @@
 </div>
 
 <!-- Acciones Rápidas y Alertas -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+<div class="grid grid-cols-1 gap-4 md:gap-6 mb-6 md:mb-8">
 
     <!-- Pago Rápido -->
     <div class="bg-white shadow-xl rounded-lg p-4 md:p-6">
@@ -67,58 +67,63 @@
         </h3>
 
         <form id="pagoRapidoForm" action="/dashboard/pago-rapido" method="POST" class="space-y-4 hidden">
-            <div>
-                <label for="id_contrato" class="block text-sm font-medium text-gray-700 mb-1">Seleccionar Contrato</label>
-                <select name="id_contrato" id="id_contrato" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base">
-                    <option value="">-- Seleccionar Contrato --</option>
-                    <?php foreach ($contratos_activos as $contrato): ?>
-                        <option value="<?= $contrato['id_contrato'] ?>">
-                            #<?= $contrato['id_contrato'] ?> - <?= $contrato['nombre_completo'] ?? 'Cliente' ?> (<?= $contrato['placa'] ?? 'Moto' ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label for="id_contrato" class="block text-sm font-medium text-gray-700 mb-1">Seleccionar Contrato</label>
+                    <select name="id_contrato" id="id_contrato" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base">
+                        <option value="">-- Seleccionar Contrato --</option>
+                        <?php foreach ($contratos_activos as $contrato): ?>
+                            <option value="<?= $contrato['id_contrato'] ?>">
+                                #<?= $contrato['id_contrato'] ?> - <?= $contrato['nombre_completo'] ?? 'Cliente' ?> (<?= $contrato['placa'] ?? 'Moto' ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="monto_pago" class="block text-sm font-medium text-gray-700 mb-1">Monto del Pago</label>
+                    <input type="number" name="monto_pago" id="monto_pago" step="0.01" min="0.01" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                           placeholder="0.00">
+                </div>
+
+                <div>
+                    <label for="fecha_pago" class="block text-sm font-medium text-gray-700 mb-1">Fecha del Pago</label>
+                    <input type="date" name="fecha_pago" id="fecha_pago" value="<?= date('Y-m-d') ?>" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base">
+                </div>
+
+                <div>
+                    <label for="concepto" class="block text-sm font-medium text-gray-700 mb-1">Concepto (Opcional)</label>
+                    <input type="text" name="concepto" id="concepto"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                           placeholder="Pago mensual, etc.">
+                </div>
             </div>
 
-            <div>
-                <label for="monto_pago" class="block text-sm font-medium text-gray-700 mb-1">Monto del Pago</label>
-                <input type="number" name="monto_pago" id="monto_pago" step="0.01" min="0.01" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                       placeholder="0.00">
+            <div class="flex justify-end mt-4">
+                <button type="submit" class="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 text-sm md:text-base">
+                    <i class="fas fa-credit-card mr-2"></i>
+                    Registrar Pago
+                </button>
             </div>
-
-            <div>
-                <label for="fecha_pago" class="block text-sm font-medium text-gray-700 mb-1">Fecha del Pago</label>
-                <input type="date" name="fecha_pago" id="fecha_pago" value="<?= date('Y-m-d') ?>" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base">
-            </div>
-
-            <div>
-                <label for="concepto" class="block text-sm font-medium text-gray-700 mb-1">Concepto (Opcional)</label>
-                <input type="text" name="concepto" id="concepto"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
-                       placeholder="Pago mensual, etc.">
-            </div>
-
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 text-sm md:text-base">
-                <i class="fas fa-credit-card mr-2"></i>
-                Registrar Pago
-            </button>
         </form>
     </div>
-
 
 </div>
 
 <!-- Gráficos y Estadísticas -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
 
     <!-- Gráfico de Rentabilidad -->
-    <div class="bg-white shadow-xl rounded-lg p-4 md:p-6">
+    <div class="bg-white shadow-xl rounded-lg p-4 md:p-6 xl:col-span-2">
         <h3 class="text-lg md:text-xl font-semibold text-gray-800 mb-4 flex items-center">
             <i class="fas fa-chart-line text-green-500 mr-2"></i>
             Rentabilidad Mensual
         </h3>
-        <canvas id="rentabilidadChart" width="400" height="200"></canvas>
+        <div class="h-64 md:h-80">
+            <canvas id="rentabilidadChart" width="400" height="200"></canvas>
+        </div>
     </div>
 
     <!-- Últimos Pagos -->
@@ -127,7 +132,7 @@
             <i class="fas fa-credit-card text-blue-500 mr-2"></i>
             Últimos Pagos
         </h3>
-        <div class="space-y-3 max-h-64 overflow-y-auto">
+        <div class="space-y-3 max-h-64 md:max-h-80 overflow-y-auto">
             <?php if (!empty($chartData['pagos_recientes'])): ?>
                 <?php foreach ($chartData['pagos_recientes'] as $pago): ?>
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -156,7 +161,9 @@
     </h3>
     <div class="text-center">
         <h4 class="text-base md:text-lg font-medium text-gray-700 mb-2">Ingresos vs Gastos</h4>
-        <canvas id="ingresosGastosChart" width="400" height="300"></canvas>
+        <div class="inline-block w-64 h-64 md:w-48 md:h-48 lg:w-56 lg:h-56">
+            <canvas id="ingresosGastosChart"></canvas>
+        </div>
     </div>
 </div>
 

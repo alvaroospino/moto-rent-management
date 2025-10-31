@@ -37,6 +37,29 @@ class ContratoController {
         // ¡EL FIX! Elimina la referencia para evitar fugas de datos al próximo controlador/vista.
         unset($contrato); //
 
+        // Estadísticas para el dashboard de contratos
+        $stats = [
+            'total_contratos_activos' => count($contratos),
+            'valor_total_contratos' => array_sum(array_column($contratos, 'valor_vehiculo')),
+            'saldo_total_por_cobrar' => array_sum(array_column($contratos, 'saldo_por_pagar')),
+            'ingreso_mensual_estimado' => array_sum(array_column($contratos, 'cuota_mensual')),
+            'contratos_proximos_vencer' => count(Contrato::getContratosProximosVencer()),
+            'pagos_mes_actual' => Contrato::calcularPagosMesActualTotal()
+        ];
+
+        // Datos para gráficos
+        $chartData = [
+            'estado_contratos' => $this->getEstadoContratosData(),
+            'pagos_mensuales' => Contrato::getIngresosUltimos6Meses(),
+            'contratos_por_mes' => $this->getContratosPorMesData()
+        ];
+
+        // Alertas importantes
+        $alertas = [
+            'contratos_venciendo' => Contrato::getContratosProximosVencer(),
+            'contratos_sin_pagos' => $this->getContratosSinPagosRecientes()
+        ];
+
         // Carga el layout principal, inyectando la vista específica
         $contentView = __DIR__ . '/../views/contratos/index.php';
         $title = 'Gestión de Contratos';
@@ -236,6 +259,56 @@ class ContratoController {
             echo json_encode(['error' => $e->getMessage()]);
         }
         exit;
+    }
+
+    /**
+     * Obtener datos para gráfico de estado de contratos
+     */
+    private function getEstadoContratosData() {
+        $contrato = new Contrato();
+        $sql = "SELECT estado, COUNT(*) as cantidad FROM contratos GROUP BY estado";
+        $stmt = $contrato->getDb()->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtener datos de contratos por mes
+     */
+    private function getContratosPorMesData() {
+        $contrato = new Contrato();
+        $sql = "
+            SELECT
+                DATE_FORMAT(fecha_inicio, '%Y-%m') as mes,
+                COUNT(*) as cantidad
+            FROM contratos
+            WHERE fecha_inicio >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            GROUP BY DATE_FORMAT(fecha_inicio, '%Y-%m')
+            ORDER BY mes ASC
+        ";
+        $stmt = $contrato->getDb()->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtener contratos sin pagos recientes
+     */
+    private function getContratosSinPagosRecientes() {
+        $contrato = new Contrato();
+        $sql = "
+            SELECT c.*, cl.nombre_completo, m.placa, m.marca,
+                   DATEDIFF(CURDATE(), COALESCE(MAX(pc.fecha_pago), c.fecha_inicio)) as dias_sin_pago
+            FROM contratos c
+            JOIN clientes cl ON c.id_cliente = cl.id_cliente
+            JOIN motos m ON c.id_moto = m.id_moto
+            LEFT JOIN pagos_contrato pc ON c.id_contrato = pc.id_contrato
+            WHERE c.estado = 'activo'
+            GROUP BY c.id_contrato
+            HAVING dias_sin_pago > 30
+            ORDER BY dias_sin_pago DESC
+            LIMIT 5
+        ";
+        $stmt = $contrato->getDb()->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function cerrarPeriodo($idContrato, $idPeriodo) {

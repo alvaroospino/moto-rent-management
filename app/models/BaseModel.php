@@ -209,4 +209,9 @@ class BaseModel {
 
     protected $whereRawClause = '';
     protected $whereRawParams = [];
+
+    // Método para acceder a la conexión de base de datos
+    public function getDb() {
+        return $this->db;
+    }
 }

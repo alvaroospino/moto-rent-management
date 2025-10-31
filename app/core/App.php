@@ -15,6 +15,16 @@ class App {
         self::$routes['POST'][$uri] = $action;
     }
 
+    // Método estático para registrar rutas PUT
+    public static function put($uri, $action) {
+        self::$routes['PUT'][$uri] = $action;
+    }
+
+    // Método estático para registrar rutas DELETE
+    public static function delete($uri, $action) {
+        self::$routes['DELETE'][$uri] = $action;
+    }
+
     public function run() {
         $requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $method = $_SERVER['REQUEST_METHOD'];

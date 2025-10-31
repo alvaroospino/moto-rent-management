@@ -331,6 +331,19 @@ class Contrato extends BaseModel {
     }
 
     /**
+     * Calcular total de pagos del mes actual para todos los contratos
+     */
+    public static function calcularPagosMesActualTotal() {
+        $pagoModel = new PagoContrato();
+        $sql = "SELECT SUM(monto_pago) as total FROM pagos_contrato
+                WHERE MONTH(fecha_pago) = MONTH(CURDATE())
+                AND YEAR(fecha_pago) = YEAR(CURDATE())";
+        $stmt = $pagoModel->db->query($sql);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['total'] ?? 0 : 0;
+    }
+
+    /**
      * Obtener rentabilidad mensual (ingresos vs gastos)
      */
     public static function getRentabilidadMensual() {
