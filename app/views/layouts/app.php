@@ -85,6 +85,40 @@ if (!defined('BASE_URL')) {
     </style>
     <div class="flex h-screen">
 
+        <!-- Bottom Navigation Bar for Mobile -->
+        <nav id="mobile-nav" class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg md:hidden">
+            <div class="flex justify-around items-center py-2">
+                <?php
+                $currentPath = $_SERVER['REQUEST_URI'];
+                $isDashboard = strpos($currentPath, '/dashboard') !== false;
+                $isMotos = strpos($currentPath, '/motos') !== false;
+                $isClientes = strpos($currentPath, '/clientes') !== false;
+                $isContratos = strpos($currentPath, '/contratos') !== false;
+                $isGastos = strpos($currentPath, '/gastos') !== false;
+                ?>
+                <a href="<?= BASE_URL ?>dashboard" class="flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 hover:bg-indigo-50 group <?php if ($isDashboard) echo 'bg-indigo-100 text-indigo-700'; ?>">
+                    <i class="fas fa-tachometer-alt text-xl <?php if ($isDashboard) echo 'text-indigo-700'; else echo 'text-gray-600'; ?> group-hover:text-indigo-600 mb-1"></i>
+                    <span class="text-xs font-medium <?php if ($isDashboard) echo 'text-indigo-700'; else echo 'text-gray-600'; ?> group-hover:text-indigo-600">Dashboard</span>
+                </a>
+                <a href="<?= BASE_URL ?>motos" class="flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 hover:bg-emerald-50 group <?php if ($isMotos) echo 'bg-emerald-100 text-emerald-700'; ?>">
+                    <i class="fas fa-motorcycle text-xl <?php if ($isMotos) echo 'text-emerald-700'; else echo 'text-gray-600'; ?> group-hover:text-emerald-600 mb-1"></i>
+                    <span class="text-xs font-medium <?php if ($isMotos) echo 'text-emerald-700'; else echo 'text-gray-600'; ?> group-hover:text-emerald-600">Motos</span>
+                </a>
+                <a href="<?= BASE_URL ?>clientes" class="flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 hover:bg-blue-50 group <?php if ($isClientes) echo 'bg-blue-100 text-blue-700'; ?>">
+                    <i class="fas fa-users text-xl <?php if ($isClientes) echo 'text-blue-700'; else echo 'text-gray-600'; ?> group-hover:text-blue-600 mb-1"></i>
+                    <span class="text-xs font-medium <?php if ($isClientes) echo 'text-blue-700'; else echo 'text-gray-600'; ?> group-hover:text-blue-600">Clientes</span>
+                </a>
+                <a href="<?= BASE_URL ?>contratos" class="flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 hover:bg-orange-50 group <?php if ($isContratos) echo 'bg-orange-100 text-orange-700'; ?>">
+                    <i class="fas fa-file-contract text-xl <?php if ($isContratos) echo 'text-orange-700'; else echo 'text-gray-600'; ?> group-hover:text-orange-600 mb-1"></i>
+                    <span class="text-xs font-medium <?php if ($isContratos) echo 'text-orange-700'; else echo 'text-gray-600'; ?> group-hover:text-orange-600">Contratos</span>
+                </a>
+                <a href="<?= BASE_URL ?>gastos" class="flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 hover:bg-yellow-50 group <?php if ($isGastos) echo 'bg-yellow-100 text-yellow-700'; ?>">
+                    <i class="fas fa-wallet text-xl <?php if ($isGastos) echo 'text-yellow-700'; else echo 'text-gray-600'; ?> group-hover:text-yellow-600 mb-1"></i>
+                    <span class="text-xs font-medium <?php if ($isGastos) echo 'text-yellow-700'; else echo 'text-gray-600'; ?> group-hover:text-yellow-600">Gastos</span>
+                </a>
+            </div>
+        </nav>
+
         <aside id="sidebar" class="fixed md:static z-30 inset-y-0 left-0 w-64 md:w-64 transform -translate-x-full md:translate-x-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col transition-all duration-300 ease-in-out overflow-hidden shadow-2xl">
             <div class="flex items-center justify-between p-6 border-b border-gray-700/50 sidebar-header bg-gradient-to-r from-indigo-600/20 to-purple-600/20 backdrop-blur-sm">
                 <div class="flex items-center space-x-3">
@@ -232,7 +266,7 @@ if (!defined('BASE_URL')) {
                 </div>
             </header>
 
-            <main class="flex-1 overflow-x-hidden overflow-y-auto">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto pb-20 md:pb-0">
                 <div class="page-container px-3 md:px-4 lg:px-6 py-4 md:py-6">
                     <?php
                     if (isset($contentView)) {
