@@ -2,15 +2,11 @@
 // register.php - Archivo independiente para registrar usuarios
 // Contiene todo el proceso de registro en un solo archivo para fácil eliminación
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'moto_rent_db'; // Ajusta según tu configuración
-$username = 'root'; // Usuario por defecto de XAMPP
-$password = ''; // Contraseña vacía por defecto en XAMPP
+// Configuración de la base de datos usando el sistema centralizado
+require_once __DIR__ . '/app/core/Database.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = Database::getInstance()->getConnection();
 } catch (PDOException $e) {
     die("Error de conexión: " . $e->getMessage());
 }
@@ -68,7 +64,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
         // Insertar usuario
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, email, password_hash, rol, creado_en) VALUES (?, ?, ?, ?, NOW())");
+
+        // Detectar tipo de base de datos para usar la función de fecha correcta
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $nowFunction = ($driver === 'pgsql') ? 'CURRENT_TIMESTAMP' : 'NOW()';
+
+        $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, email, password_hash, rol, creado_en) VALUES (?, ?, ?, ?, {$nowFunction})");
         try {
             $stmt->execute([$nombre, $email, $hashed_password, $rol]);
             $message = "Usuario registrado exitosamente.";
