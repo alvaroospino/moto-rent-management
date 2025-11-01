@@ -236,14 +236,9 @@ class Contrato extends BaseModel {
         $baseModel = new self(); // Usamos la instancia para acceder a los métodos de compatibilidad
         $sqlCurDate = $baseModel->getSqlCurrentDate();
 
-        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
+        // PostgreSQL usa sintaxis específica
         $sql = "SELECT SUM(monto_pago) as total FROM pagos_contrato WHERE fecha_pago::date = {$sqlCurDate}";
-        if ($baseModel->getDatabaseType() === 'mysql') {
-            // MySQL usa la sintaxis original (más simple)
-            $sql = "SELECT SUM(monto_pago) as total FROM pagos_contrato WHERE DATE(fecha_pago) = CURDATE()";
-        }
-        // --- FIN AJUSTE ---
-        
+
         $stmt = $pagoModel->db->query($sql);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ? $result['total'] ?? 0 : 0;
@@ -265,17 +260,10 @@ class Contrato extends BaseModel {
      */
     public static function getContratosProximosVencer() {
         $contrato = new self();
-        $dbType = $contrato->getDatabaseType();
 
-        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
-        if ($dbType === 'pgsql') {
-            // PostgreSQL usa la diferencia de fechas de manera diferente (operador - o AGE)
-            $dateDiffSql = "(p.fecha_fin_periodo::date - CURRENT_DATE)";
-        } else {
-            // MySQL usa DATEDIFF
-            $dateDiffSql = "DATEDIFF(p.fecha_fin_periodo, CURDATE())";
-        }
-        
+        // PostgreSQL usa la diferencia de fechas con operador -
+        $dateDiffSql = "(p.fecha_fin_periodo::date - CURRENT_DATE)";
+
         $sql = "
             SELECT c.*, cl.nombre_completo, m.placa, m.marca,
                    {$dateDiffSql} as dias_restantes
@@ -288,8 +276,7 @@ class Contrato extends BaseModel {
             AND {$dateDiffSql} BETWEEN 0 AND 7
             ORDER BY p.fecha_fin_periodo ASC
         ";
-        // --- FIN AJUSTE ---
-        
+
         $stmt = $contrato->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -363,17 +350,10 @@ class Contrato extends BaseModel {
      */
     public static function getPagosRecientes($limit = 10) {
         $contrato = new self();
-        $dbType = $contrato->getDatabaseType();
-        
-        // DATE_FORMAT en el SELECT es la única parte que cambia
-        if ($dbType === 'pgsql') {
-            // PostgreSQL TO_CHAR para formato 'DD/MM/YYYY'
-            $dateFormatDisplay = "TO_CHAR(pc.fecha_pago, 'DD/MM/YYYY')";
-        } else {
-            // MySQL DATE_FORMAT para formato 'DD/MM/YYYY'
-            $dateFormatDisplay = "DATE_FORMAT(pc.fecha_pago, '%d/%m/%Y')";
-        }
-        
+
+        // PostgreSQL TO_CHAR para formato 'DD/MM/YYYY'
+        $dateFormatDisplay = "TO_CHAR(pc.fecha_pago, 'DD/MM/YYYY')";
+
         $sql = "
             SELECT
                 pc.*,

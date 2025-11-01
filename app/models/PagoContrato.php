@@ -20,6 +20,9 @@ class PagoContrato extends BaseModel {
     /**
      * Reflejar pago en control diario
      */
+    /**
+     * Reflejar pago en control diario
+     */
     public static function reflejarEnControlDiario($idContrato, $idPeriodo, $fecha, $montoPago, $idUsuario) {
         $db = Database::getInstance()->getConnection();
 
@@ -45,7 +48,12 @@ class PagoContrato extends BaseModel {
 
         // Si no se actualizó nada (no existe), insertar nuevo
         if ($result && $updateStmt->rowCount() == 0) {
+            
+            // Conversión explícita para PostgreSQL: 
+            // el booleano de PHP 'true'/'false' se convierte a las cadenas 't'/'f'
             $esDomingo = (date('w', strtotime($fecha)) == 0);
+            $esDomingo_pg = $esDomingo ? 't' : 'f'; 
+            
             $estadoInicial = ($montoPago > 0) ? 'pagado' : 'pendiente';
 
             $insertStmt = $db->prepare("
@@ -57,7 +65,7 @@ class PagoContrato extends BaseModel {
                 ':id_contrato' => $idContrato,
                 ':id_periodo' => $idPeriodo,
                 ':fecha' => $fecha,
-                ':es_domingo' => $esDomingo,
+                ':es_domingo' => $esDomingo_pg, // Usando el valor convertido
                 ':estado_dia' => $estadoInicial,
                 ':monto_pagado' => $montoPago,
                 ':id_usuario' => $idUsuario,

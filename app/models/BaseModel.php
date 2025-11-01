@@ -39,7 +39,7 @@ class BaseModel {
         return $row;
     }
 
-    // MÉTODO CREATE AJUSTADO PARA COMPATIBILIDAD DE AUTO_INCREMENT
+    // MÉTODO CREATE PARA POSTGRESQL
     public function create(array $data) {
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -61,16 +61,10 @@ class BaseModel {
         }
 
         $stmt->execute();
-        
-        // --- LÓGICA DE COMPATIBILIDAD lastInsertId ---
-        $dbType = $this->getDatabaseType();
-        if ($dbType === 'pgsql') {
-            // PostgreSQL necesita el nombre de la secuencia (asumiendo patrón 'tabla_id_seq' o 'tabla_primarykey_seq')
-            $sequenceName = "{$this->table}_{$this->primaryKey}_seq";
-            return (int) $this->db->lastInsertId($sequenceName);
-        }
-        // MySQL y otros (usa el ID insertado automáticamente)
-        return (int) $this->db->lastInsertId();
+
+        // PostgreSQL usa secuencias para IDs autoincrementales
+        $sequenceName = "{$this->table}_{$this->primaryKey}_seq";
+        return (int) $this->db->lastInsertId($sequenceName);
     }
 
 
@@ -224,73 +218,46 @@ class BaseModel {
     }
     
     // =========================================================================
-    //  MÉTODOS DE COMPATIBILIDAD DE MOTORES (MySQL vs. PostgreSQL)
+    //  FUNCIONES SQL PARA POSTGRESQL
     // =========================================================================
-
-    /**
-     * Obtiene el tipo de motor de la DB (mysql, pgsql, etc.)
-     */
-    protected function getDatabaseType(): string {
-        return $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
-    }
 
     /**
      * Retorna la función SQL para formatear fecha a 'YYYY-MM'
      */
     protected function getSqlDateFormat(string $field): string {
-        if ($this->getDatabaseType() === 'pgsql') {
-            // PostgreSQL usa TO_CHAR
-            return "TO_CHAR({$field}, 'YYYY-MM')";
-        }
-        // MySQL y otros usan DATE_FORMAT
-        return "DATE_FORMAT({$field}, '%Y-%m')";
+        // PostgreSQL usa TO_CHAR
+        return "TO_CHAR({$field}, 'YYYY-MM')";
     }
-    
+
     /**
      * Retorna la función SQL para obtener el mes del campo
      */
     protected function getSqlMonth(string $field): string {
-        if ($this->getDatabaseType() === 'pgsql') {
-            // PostgreSQL usa EXTRACT
-            return "EXTRACT(MONTH FROM {$field})";
-        }
-        // MySQL usa MONTH
-        return "MONTH({$field})";
+        // PostgreSQL usa EXTRACT
+        return "EXTRACT(MONTH FROM {$field})";
     }
 
     /**
      * Retorna la función SQL para obtener el año del campo
      */
     protected function getSqlYear(string $field): string {
-        if ($this->getDatabaseType() === 'pgsql') {
-            // PostgreSQL usa EXTRACT
-            return "EXTRACT(YEAR FROM {$field})";
-        }
-        // MySQL usa YEAR
-        return "YEAR({$field})";
+        // PostgreSQL usa EXTRACT
+        return "EXTRACT(YEAR FROM {$field})";
     }
 
     /**
      * Retorna la función SQL para obtener la fecha/hora actual
      */
     protected function getSqlCurrentDate(): string {
-        if ($this->getDatabaseType() === 'pgsql') {
-            // PostgreSQL usa CURRENT_DATE (sin hora)
-            return "CURRENT_DATE";
-        }
-        // MySQL usa CURDATE()
-        return "CURDATE()";
+        // PostgreSQL usa CURRENT_DATE (sin hora)
+        return "CURRENT_DATE";
     }
 
     /**
      * Retorna la función SQL para restar meses a una fecha (ej. hace 6 meses)
      */
     protected function getSqlDateSubMonths(string $date, int $months): string {
-        if ($this->getDatabaseType() === 'pgsql') {
-            // PostgreSQL usa notación de INTERVAL
-            return "({$date} - INTERVAL '{$months} months')";
-        }
-        // MySQL usa DATE_SUB
-        return "DATE_SUB({$date}, INTERVAL {$months} MONTH)";
+        // PostgreSQL usa notación de INTERVAL
+        return "({$date} - INTERVAL '{$months} months')";
     }
 }

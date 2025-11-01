@@ -68,7 +68,7 @@ class Pago extends BaseModel {
     public function getPagosDelDia() {
         $sql = "SELECT SUM(monto) as total FROM movimientos_contrato
                 WHERE tipo = 'pago_ingreso'
-                AND DATE(fecha_movimiento) = CURDATE()";
+                AND fecha_movimiento::date = CURRENT_DATE";
 
         $stmt = $this->db->query($sql);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -81,8 +81,8 @@ class Pago extends BaseModel {
     public function getPagosDelMes() {
         $sql = "SELECT SUM(monto) as total FROM movimientos_contrato
                 WHERE tipo = 'pago_ingreso'
-                AND MONTH(fecha_movimiento) = MONTH(CURDATE())
-                AND YEAR(fecha_movimiento) = YEAR(CURDATE())";
+                AND EXTRACT(MONTH FROM fecha_movimiento) = EXTRACT(MONTH FROM CURRENT_DATE)
+                AND EXTRACT(YEAR FROM fecha_movimiento) = EXTRACT(YEAR FROM CURRENT_DATE)";
 
         $stmt = $this->db->query($sql);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);

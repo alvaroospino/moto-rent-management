@@ -11,26 +11,14 @@ class Usuario {
         $this->db = Database::getInstance()->getConnection();
     }
 
-    // ✅ Método compatible con MySQL y PostgreSQL
+    // Método para PostgreSQL
     public function findByEmail(string $email) {
         $sql = "SELECT * FROM {$this->table} WHERE email = :email AND activo = :activo LIMIT 1";
         $stmt = $this->db->prepare($sql);
 
         $stmt->bindValue(':email', $email, PDO::PARAM_STR);
-
-        // Detectar tipo de base de datos
-        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
-
-        // Valor lógico que queremos buscar (activo = verdadero)
-        $activoValue = true;
-
-        if ($driver === 'pgsql') {
-            // PostgreSQL espera booleanos verdaderos
-            $stmt->bindValue(':activo', $activoValue, PDO::PARAM_BOOL);
-        } else {
-            // MySQL normalmente usa 1 / 0
-            $stmt->bindValue(':activo', $activoValue ? 1 : 0, PDO::PARAM_INT);
-        }
+        // PostgreSQL usa booleanos
+        $stmt->bindValue(':activo', true, PDO::PARAM_BOOL);
 
         $stmt->execute();
         return $stmt->fetch();

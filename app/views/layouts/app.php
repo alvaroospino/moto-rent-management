@@ -24,6 +24,9 @@ if (!defined('BASE_URL')) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Alquiler - Moto Rent</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= BASE_URL ?>assets/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?= BASE_URL ?>assets/icons/icon-192x192.png">
     <!-- PWA Manifest -->
     <link rel="manifest" href="<?= BASE_URL ?>manifest.json">
     <!-- Tailwind CDN (rápido para desarrollo). Mantengo el enlace local como fallback si existe -->
@@ -85,9 +88,7 @@ if (!defined('BASE_URL')) {
         <aside id="sidebar" class="fixed md:static z-30 inset-y-0 left-0 w-64 md:w-64 transform -translate-x-full md:translate-x-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col transition-all duration-300 ease-in-out overflow-hidden shadow-2xl">
             <div class="flex items-center justify-between p-6 border-b border-gray-700/50 sidebar-header bg-gradient-to-r from-indigo-600/20 to-purple-600/20 backdrop-blur-sm">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <i class="fas fa-motorcycle text-white text-lg"></i>
-                    </div>
+                    <img src="<?= BASE_URL ?>assets/icons/icon-192x192.png" alt="Logo" class="w-10 h-10 rounded-xl shadow-lg">
                     <span class="text-2xl font-bold text-white sidebar-title bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">MotoRent</span>
                 </div>
                 <button id="closeSidebar" class="md:hidden w-8 h-8 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200" aria-label="Cerrar menú">

@@ -8,9 +8,6 @@ class Database {
     private function __construct() {
         $config = require __DIR__ . '/../../config/database.php';
 
-        // Detectar si usar PostgreSQL o MySQL basado en variables de entorno
-        $dbType = getenv('DB_TYPE') ?: 'mysql'; // Por defecto MySQL para local
-
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -18,22 +15,16 @@ class Database {
         ];
 
         try {
-            if ($dbType === 'postgresql' || $dbType === 'pgsql') {
-                // PostgreSQL (Render)
-                $host = getenv('DB_HOST') ?: $config['host'];
-                $port = getenv('DB_PORT') ?: 5432;
-                $dbname = getenv('DB_NAME') ?: $config['db_name'];
-                $user = getenv('DB_USERNAME') ?: $config['username'];
-                $pass = getenv('DB_PASSWORD') ?: $config['password'];
-                $sslmode = getenv('DB_SSLMODE') ?: 'require';
+            // PostgreSQL únicamente
+            $host = getenv('DB_HOST') ?: $config['host'];
+            $port = getenv('DB_PORT') ?: $config['port'];
+            $dbname = getenv('DB_NAME') ?: $config['db_name'];
+            $user = getenv('DB_USERNAME') ?: $config['username'];
+            $pass = getenv('DB_PASSWORD') ?: $config['password'];
+            $sslmode = getenv('DB_SSLMODE') ?: $config['sslmode'];
 
-                $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode={$sslmode}";
-                $this->conn = new PDO($dsn, $user, $pass, $options);
-            } else {
-                // MySQL (local)
-                $dsn = "mysql:host={$config['host']};dbname={$config['db_name']};charset={$config['charset']}";
-                $this->conn = new PDO($dsn, $config['username'], $config['password'], $options);
-            }
+            $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode={$sslmode}";
+            $this->conn = new PDO($dsn, $user, $pass, $options);
         } catch (\PDOException $e) {
             die("Error de conexión a la base de datos: " . $e->getMessage());
         }

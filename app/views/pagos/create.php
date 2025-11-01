@@ -80,7 +80,7 @@ $contentView = __DIR__ . '/create_content.php';
                                class="bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-800 font-bold py-3 md:py-4 px-6 md:px-8 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center text-sm md:text-base">
                                 <i class="fas fa-times mr-2"></i> Cancelar
                             </a>
-                            <button type="submit"
+                            <button type="submit" id="submitBtn"
                                     class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 md:py-4 px-6 md:px-8 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center text-sm md:text-base">
                                 <i class="fas fa-save mr-2"></i> Registrar Pago
                             </button>
@@ -91,3 +91,14 @@ $contentView = __DIR__ . '/create_content.php';
         </div>
     </div>
 </div>
+
+<script>
+// Desactivar botón al enviar el formulario para evitar duplicaciones
+document.querySelector('form').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.classList.remove('from-green-500', 'to-emerald-600', 'hover:from-green-600', 'hover:to-emerald-700');
+    submitBtn.classList.add('from-gray-400', 'to-gray-500', 'cursor-not-allowed');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Procesando...';
+});
+</script>

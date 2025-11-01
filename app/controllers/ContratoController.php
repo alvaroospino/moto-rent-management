@@ -169,31 +169,14 @@ class ContratoController {
         $allPeriodos = PeriodoContrato::getPeriodosPorContrato($id);
         $totalPagado = PagoContrato::getTotalPagadoEnContrato($id);
 
-        // Filtrar para mostrar solo el periodo actual y el siguiente
-        $periodos = [];
-        $today = date('Y-m-d');
-        $currentPeriod = null;
-        $nextPeriod = null;
-
-        foreach ($allPeriodos as $periodo) {
-            if ($today >= $periodo['fecha_inicio_periodo'] && $today <= $periodo['fecha_fin_periodo']) {
-                $currentPeriod = $periodo;
-            } elseif ($today < $periodo['fecha_inicio_periodo']) {
-                if (!$nextPeriod) {
-                    $nextPeriod = $periodo;
-                }
-            }
-        }
-
-        if ($currentPeriod) {
-            $periodos[] = $currentPeriod;
-        }
-        if ($nextPeriod) {
-            $periodos[] = $nextPeriod;
-        }
+        // Filtrar para mostrar todos los periodos abiertos (disponibles para cerrar)
+        $periodos = array_filter($allPeriodos, function($periodo) {
+            return $periodo['estado_periodo'] === 'abierto';
+        });
 
         // Preparar datos del historial completo para el modal
         $historialPeriodos = [];
+        $pagoModel = new PagoContrato();
         foreach ($allPeriodos as $periodo) {
             $diasPeriodo = PeriodoContrato::getDiasPeriodo($id, $periodo['id_periodo']);
             $habiles = 0; $pagados = 0; $pendientes = 0; $nopago = 0; $totalDia = 0;
@@ -207,9 +190,16 @@ class ContratoController {
                     default: $pendientes++; break;
                 }
             }
+
+            // Obtener pagos realizados en este periodo específico
+            $pagosPeriodo = $pagoModel->where(['id_periodo' => $periodo['id_periodo']])
+                                      ->orderBy('fecha_pago', 'ASC')
+                                      ->get();
+
             $historialPeriodos[] = [
                 'periodo' => $periodo,
                 'dias' => $diasPeriodo,
+                'pagos' => $pagosPeriodo,
                 'metricas' => [
                     'habiles' => $habiles,
                     'pagados' => $pagados,

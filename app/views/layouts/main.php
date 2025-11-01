@@ -13,6 +13,9 @@ if (!defined('BASE_URL')) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moto Rent - Gestión de Alquiler de Motos</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= BASE_URL ?>assets/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?= BASE_URL ?>assets/icons/icon-192x192.png">
     <!-- PWA Manifest -->
     <link rel="manifest" href="<?= BASE_URL ?>manifest.json">
     <!-- Tailwind CDN -->

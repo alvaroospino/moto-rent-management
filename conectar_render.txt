@@ -1,0 +1,8 @@
+| Dato                              | Valor                                                   |
+| | ---------------------------------------------------------------- |
+| **Host / Dirección del servidor** | `dpg-d42mc66r433s73dp7ih0-a.oregon-					    |  postgres.render.com`
+| **Puerto**                        | `5432`           |
+| **Base de datos**                 | `moto_rent_db_d0cc`                                     |
+| **Usuario**                       | `moto_rent_user`                                        |
+| **Contraseña**                    | `i6hvtzfEcO1t00rq7Z4eSsvBlXsq0wQh`                      |
+| **Modo SSL**                      | `require` *(Render lo exige)*                           |

@@ -161,7 +161,7 @@
                     <a href="<?= BASE_URL ?>contratos" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition duration-300">
                         <i class="fas fa-times mr-2"></i> Cancelar
                     </a>
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-300 shadow-lg hover:shadow-xl">
+                    <button type="submit" id="submitBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-300 shadow-lg hover:shadow-xl">
                         <i class="fas fa-save mr-2"></i> Crear Contrato
                     </button>
                 </div>
@@ -213,5 +213,12 @@ document.getElementById('id_moto').addEventListener('change', function() {
         document.getElementById('valor_vehiculo').value = valor;
         calcularResumen();
     }
+});
+
+// Desactivar botón al enviar el formulario para evitar duplicaciones
+document.getElementById('contratoForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creando Contrato...';
 });
 </script>
