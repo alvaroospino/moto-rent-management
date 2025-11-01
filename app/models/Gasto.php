@@ -79,12 +79,22 @@ class Gasto extends BaseModel {
      * @return float
      */
     public function getTotalGastosMes(): float {
+        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
+        $sqlMonth = $this->getSqlMonth('fecha_gasto');
+        $sqlYear = $this->getSqlYear('fecha_gasto');
+        
+        $sqlCurDate = $this->getSqlCurrentDate();
+        $sqlCurDateMonth = $this->getSqlMonth($sqlCurDate);
+        $sqlCurDateYear = $this->getSqlYear($sqlCurDate);
+
         $sql = "
             SELECT SUM(monto)
             FROM {$this->table}
-            WHERE MONTH(fecha_gasto) = MONTH(CURDATE())
-            AND YEAR(fecha_gasto) = YEAR(CURDATE())
+            WHERE {$sqlMonth} = {$sqlCurDateMonth}
+            AND {$sqlYear} = {$sqlCurDateYear}
         ";
+        // --- FIN AJUSTE ---
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return (float)($stmt->fetchColumn() ?? 0.00);
@@ -95,15 +105,21 @@ class Gasto extends BaseModel {
      * @return array
      */
     public function getGastosUltimos6Meses(): array {
+        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
+        $sqlDateFormat = $this->getSqlDateFormat('fecha_gasto');
+        $sqlDateSub = $this->getSqlDateSubMonths($this->getSqlCurrentDate(), 6);
+
         $sql = "
             SELECT
-                DATE_FORMAT(fecha_gasto, '%Y-%m') as mes,
+                {$sqlDateFormat} as mes,
                 SUM(monto) as total_gastos
             FROM {$this->table}
-            WHERE fecha_gasto >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(fecha_gasto, '%Y-%m')
+            WHERE fecha_gasto >= {$sqlDateSub}
+            GROUP BY {$sqlDateFormat}
             ORDER BY mes ASC
         ";
+        // --- FIN AJUSTE ---
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

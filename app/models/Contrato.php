@@ -4,6 +4,7 @@
 require_once __DIR__ . '/BaseModel.php';
 require_once __DIR__ . '/PeriodoContrato.php';
 require_once __DIR__ . '/PagoContrato.php';
+require_once __DIR__ . '/Gasto.php'; // Agregado: Requerido por getUtilidadNetaMes y getRentabilidadMensual
 
 class Contrato extends BaseModel {
     public function __construct() {
@@ -206,10 +207,21 @@ class Contrato extends BaseModel {
      */
     public static function calcularPagosMesActual($idContrato) {
         $pagoModel = new PagoContrato();
+        $baseModel = new self(); // Usamos la instancia para acceder a los métodos de compatibilidad
+
+        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
+        $sqlMonth = $baseModel->getSqlMonth('fecha_pago');
+        $sqlYear = $baseModel->getSqlYear('fecha_pago');
+        $sqlCurDate = $baseModel->getSqlCurrentDate();
+        $sqlCurDateMonth = $baseModel->getSqlMonth($sqlCurDate);
+        $sqlCurDateYear = $baseModel->getSqlYear($sqlCurDate);
+
         $sql = "SELECT SUM(monto_pago) as total FROM pagos_contrato
                 WHERE id_contrato = :id_contrato
-                AND MONTH(fecha_pago) = MONTH(CURDATE())
-                AND YEAR(fecha_pago) = YEAR(CURDATE())";
+                AND {$sqlMonth} = {$sqlCurDateMonth}
+                AND {$sqlYear} = {$sqlCurDateYear}";
+        // --- FIN AJUSTE ---
+
         $stmt = $pagoModel->db->prepare($sql);
         $stmt->execute(['id_contrato' => $idContrato]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -221,7 +233,17 @@ class Contrato extends BaseModel {
      */
     public static function getIngresoHoy() {
         $pagoModel = new PagoContrato();
-        $sql = "SELECT SUM(monto_pago) as total FROM pagos_contrato WHERE DATE(fecha_pago) = CURDATE()";
+        $baseModel = new self(); // Usamos la instancia para acceder a los métodos de compatibilidad
+        $sqlCurDate = $baseModel->getSqlCurrentDate();
+
+        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
+        $sql = "SELECT SUM(monto_pago) as total FROM pagos_contrato WHERE fecha_pago::date = {$sqlCurDate}";
+        if ($baseModel->getDatabaseType() === 'mysql') {
+            // MySQL usa la sintaxis original (más simple)
+            $sql = "SELECT SUM(monto_pago) as total FROM pagos_contrato WHERE DATE(fecha_pago) = CURDATE()";
+        }
+        // --- FIN AJUSTE ---
+        
         $stmt = $pagoModel->db->query($sql);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ? $result['total'] ?? 0 : 0;
@@ -243,18 +265,31 @@ class Contrato extends BaseModel {
      */
     public static function getContratosProximosVencer() {
         $contrato = new self();
+        $dbType = $contrato->getDatabaseType();
+
+        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
+        if ($dbType === 'pgsql') {
+            // PostgreSQL usa la diferencia de fechas de manera diferente (operador - o AGE)
+            $dateDiffSql = "(p.fecha_fin_periodo::date - CURRENT_DATE)";
+        } else {
+            // MySQL usa DATEDIFF
+            $dateDiffSql = "DATEDIFF(p.fecha_fin_periodo, CURDATE())";
+        }
+        
         $sql = "
             SELECT c.*, cl.nombre_completo, m.placa, m.marca,
-                   DATEDIFF(p.fecha_fin_periodo, CURDATE()) as dias_restantes
+                   {$dateDiffSql} as dias_restantes
             FROM contratos c
             JOIN clientes cl ON c.id_cliente = cl.id_cliente
             JOIN motos m ON c.id_moto = m.id_moto
             JOIN periodos_contrato p ON c.id_contrato = p.id_contrato
             WHERE c.estado = 'activo'
             AND p.estado_periodo = 'abierto'
-            AND DATEDIFF(p.fecha_fin_periodo, CURDATE()) BETWEEN 0 AND 7
+            AND {$dateDiffSql} BETWEEN 0 AND 7
             ORDER BY p.fecha_fin_periodo ASC
         ";
+        // --- FIN AJUSTE ---
+        
         $stmt = $contrato->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -263,13 +298,12 @@ class Contrato extends BaseModel {
      * Obtener utilidad neta del mes actual (ingresos - gastos)
      */
     public static function getUtilidadNetaMes() {
-        $contrato = new self();
-        $gastoModel = new Gasto();
-
         // Ingresos del mes
         $ingresos = self::getIngresoMes();
 
         // Gastos del mes
+        // Asegúrate de que Gasto.php esté requerido al inicio del archivo
+        $gastoModel = new Gasto();
         $gastos = $gastoModel->getTotalGastosMes();
 
         return $ingresos - $gastos;
@@ -280,9 +314,20 @@ class Contrato extends BaseModel {
      */
     public static function getIngresoMes() {
         $pagoModel = new PagoContrato();
+        $baseModel = new self(); // Usamos la instancia para acceder a los métodos de compatibilidad
+
+        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
+        $sqlMonth = $baseModel->getSqlMonth('fecha_pago');
+        $sqlYear = $baseModel->getSqlYear('fecha_pago');
+        $sqlCurDate = $baseModel->getSqlCurrentDate();
+        $sqlCurDateMonth = $baseModel->getSqlMonth($sqlCurDate);
+        $sqlCurDateYear = $baseModel->getSqlYear($sqlCurDate);
+
         $sql = "SELECT SUM(monto_pago) as total FROM pagos_contrato
-                WHERE MONTH(fecha_pago) = MONTH(CURDATE())
-                AND YEAR(fecha_pago) = YEAR(CURDATE())";
+                WHERE {$sqlMonth} = {$sqlCurDateMonth}
+                AND {$sqlYear} = {$sqlCurDateYear}";
+        // --- FIN AJUSTE ---
+
         $stmt = $pagoModel->db->query($sql);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ? $result['total'] ?? 0 : 0;
@@ -293,15 +338,22 @@ class Contrato extends BaseModel {
      */
     public static function getIngresosUltimos6Meses() {
         $contrato = new self();
+
+        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
+        $sqlDateFormat = $contrato->getSqlDateFormat('fecha_pago');
+        $sqlDateSub = $contrato->getSqlDateSubMonths($contrato->getSqlCurrentDate(), 6);
+
         $sql = "
             SELECT
-                DATE_FORMAT(fecha_pago, '%Y-%m') as mes,
+                {$sqlDateFormat} as mes,
                 SUM(monto_pago) as total_ingresos
             FROM pagos_contrato
-            WHERE fecha_pago >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(fecha_pago, '%Y-%m')
+            WHERE fecha_pago >= {$sqlDateSub}
+            GROUP BY {$sqlDateFormat}
             ORDER BY mes ASC
         ";
+        // --- FIN AJUSTE ---
+
         $stmt = $contrato->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -311,12 +363,23 @@ class Contrato extends BaseModel {
      */
     public static function getPagosRecientes($limit = 10) {
         $contrato = new self();
+        $dbType = $contrato->getDatabaseType();
+        
+        // DATE_FORMAT en el SELECT es la única parte que cambia
+        if ($dbType === 'pgsql') {
+            // PostgreSQL TO_CHAR para formato 'DD/MM/YYYY'
+            $dateFormatDisplay = "TO_CHAR(pc.fecha_pago, 'DD/MM/YYYY')";
+        } else {
+            // MySQL DATE_FORMAT para formato 'DD/MM/YYYY'
+            $dateFormatDisplay = "DATE_FORMAT(pc.fecha_pago, '%d/%m/%Y')";
+        }
+        
         $sql = "
             SELECT
                 pc.*,
                 c.nombre_completo,
                 m.placa,
-                DATE_FORMAT(pc.fecha_pago, '%d/%m/%Y') as fecha_formateada
+                {$dateFormatDisplay} as fecha_formateada
             FROM pagos_contrato pc
             JOIN contratos co ON pc.id_contrato = co.id_contrato
             JOIN clientes c ON co.id_cliente = c.id_cliente
@@ -335,9 +398,20 @@ class Contrato extends BaseModel {
      */
     public static function calcularPagosMesActualTotal() {
         $pagoModel = new PagoContrato();
+        $baseModel = new self(); // Usamos la instancia para acceder a los métodos de compatibilidad
+
+        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
+        $sqlMonth = $baseModel->getSqlMonth('fecha_pago');
+        $sqlYear = $baseModel->getSqlYear('fecha_pago');
+        $sqlCurDate = $baseModel->getSqlCurrentDate();
+        $sqlCurDateMonth = $baseModel->getSqlMonth($sqlCurDate);
+        $sqlCurDateYear = $baseModel->getSqlYear($sqlCurDate);
+        
         $sql = "SELECT SUM(monto_pago) as total FROM pagos_contrato
-                WHERE MONTH(fecha_pago) = MONTH(CURDATE())
-                AND YEAR(fecha_pago) = YEAR(CURDATE())";
+                WHERE {$sqlMonth} = {$sqlCurDateMonth}
+                AND {$sqlYear} = {$sqlCurDateYear}";
+        // --- FIN AJUSTE ---
+        
         $stmt = $pagoModel->db->query($sql);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ? $result['total'] ?? 0 : 0;
@@ -350,21 +424,27 @@ class Contrato extends BaseModel {
         $contrato = new self();
         $gastoModel = new Gasto();
 
-        // Generar los últimos 6 meses
+        // Generar los últimos 6 meses (Lógica PHP es compatible)
         $meses = [];
         for ($i = 5; $i >= 0; $i--) {
             $meses[] = date('Y-m', strtotime("-$i months"));
         }
 
+        // --- CONSULTA AJUSTADA PARA COMPATIBILIDAD ---
+        $sqlDateFormat = $contrato->getSqlDateFormat('fecha_pago');
+        $sqlDateSub = $contrato->getSqlDateSubMonths($contrato->getSqlCurrentDate(), 6);
+
         $sql = "
             SELECT
-                DATE_FORMAT(fecha_pago, '%Y-%m') as mes,
+                {$sqlDateFormat} as mes,
                 SUM(monto_pago) as ingresos
             FROM pagos_contrato
-            WHERE fecha_pago >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(fecha_pago, '%Y-%m')
+            WHERE fecha_pago >= {$sqlDateSub}
+            GROUP BY {$sqlDateFormat}
             ORDER BY mes ASC
         ";
+        // --- FIN AJUSTE ---
+        
         $stmt = $contrato->db->query($sql);
         $ingresos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
