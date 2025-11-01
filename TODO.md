@@ -1,14 +1,4 @@
-# TODO: Despliegue en Render con Docker y PostgreSQL
-
-## Tareas Completadas
-- [x] Modificar Database.php para usar PostgreSQL (ya configurado)
-- [x] Crear schema_postgresql.sql convertido de MySQL
-- [x] Crear Dockerfile para PHP-Apache con configuración de rutas amigables
-- [x] Crear .dockerignore
-- [x] Proporcionar instrucciones para Render
-
-## Próximos Pasos
-- Configurar base de datos PostgreSQL en Render
-- Subir schema a la DB
-- Configurar variables de entorno en Render
-- Probar despliegue
+- [x] Corregir definición de BASE_URL en public/index.php, layouts/main.php, layouts/app.php
+- [x] Corregir enlaces hardcodeados a recursos estáticos en layouts/main.php y layouts/app.php
+- [x] Ajustar configuración de base de datos en config/database.php para usar variables de entorno directamente
+- [x] Simplificar router en App.php para asumir despliegue en raíz

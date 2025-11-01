@@ -7,14 +7,22 @@ class Database {
 
     private function __construct() {
         $config = require __DIR__ . '/../../config/database.php';
-        
-        $dsn = "mysql:host={$config['host']};dbname={$config['db_name']};charset={$config['charset']}";
+
+        // Detectar si usar PostgreSQL o MySQL basado en variables de entorno
+        $dbType = getenv('DB_TYPE') ?: 'mysql'; // Por defecto MySQL para local
+
+        if ($dbType === 'postgresql' || $dbType === 'pgsql') {
+            $dsn = "pgsql:host={$config['host']};dbname={$config['db_name']};user={$config['username']};password={$config['password']}";
+        } else {
+            $dsn = "mysql:host={$config['host']};dbname={$config['db_name']};charset={$config['charset']}";
+        }
+
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
         ];
-        
+
         try {
             $this->conn = new PDO($dsn, $config['username'], $config['password'], $options);
         } catch (\PDOException $e) {

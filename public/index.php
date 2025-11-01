@@ -9,8 +9,13 @@ require_once __DIR__ . '/../app/core/App.php';
 // Inicializar la sesión de forma segura
 Session::init();
 
-// Definir la URL base del proyecto (para rutas absolutas)
-define('BASE_URL', rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/') . '/');
+    // Definir la URL base del proyecto (para rutas absolutas)
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+    if ($scriptDir === '/') {
+        define('BASE_URL', '/');
+    } else {
+        define('BASE_URL', rtrim($scriptDir, '/') . '/');
+    }
 
     // Autocarga de clases para no tener que usar 'require_once' en todos lados
     // Nota: usar el nombre de carpeta correcto 'controllers' (plural)

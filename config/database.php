@@ -4,7 +4,7 @@
 // Función para cargar variables de entorno desde .env
 function loadEnv($path) {
     if (!file_exists($path)) {
-        throw new Exception("El archivo .env no existe en: $path");
+        return; // No error si no existe, usar valores por defecto
     }
 
     $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -25,7 +25,7 @@ function loadEnv($path) {
     }
 }
 
-// Cargar variables de entorno desde .env
+// Cargar variables de entorno desde .env si existe
 loadEnv(__DIR__ . '/../.env');
 
 return [

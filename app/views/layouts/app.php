@@ -28,7 +28,7 @@ if (!defined('BASE_URL')) {
     <link rel="manifest" href="<?= BASE_URL ?>manifest.json">
     <!-- Tailwind CDN (rápido para desarrollo). Mantengo el enlace local como fallback si existe -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="/assets/css/tailwind.css" rel="stylesheet">
+    <link href="<?= BASE_URL ?>assets/css/tailwind.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.tailwindcss.min.css">
