@@ -25,13 +25,17 @@ function loadEnv($path) {
     }
 }
 
-// Cargar variables de entorno desde .env si existe
+// Cargar variables de entorno desde .env (solo local)
 loadEnv(__DIR__ . '/../.env');
 
+// Retornar la configuración de conexión
 return [
+    'type' => getenv('DB_TYPE') ?: 'mysql', // <- agregado para referencia
     'host' => getenv('DB_HOST') ?: 'localhost',
+    'port' => getenv('DB_PORT') ?: '3306', // <- valor por defecto MySQL
     'db_name' => getenv('DB_NAME') ?: 'moto_rent_db',
     'username' => getenv('DB_USERNAME') ?: 'root',
     'password' => getenv('DB_PASSWORD') ?: '',
-    'charset' => getenv('DB_CHARSET') ?: 'utf8mb4'
+    'charset' => getenv('DB_CHARSET') ?: 'utf8mb4',
+    'sslmode' => getenv('DB_SSLMODE') ?: 'disable', // <- agregado para Render PostgreSQL
 ];

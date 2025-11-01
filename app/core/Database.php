@@ -11,12 +11,6 @@ class Database {
         // Detectar si usar PostgreSQL o MySQL basado en variables de entorno
         $dbType = getenv('DB_TYPE') ?: 'mysql'; // Por defecto MySQL para local
 
-        if ($dbType === 'postgresql' || $dbType === 'pgsql') {
-            $dsn = "pgsql:host={$config['host']};dbname={$config['db_name']};user={$config['username']};password={$config['password']}";
-        } else {
-            $dsn = "mysql:host={$config['host']};dbname={$config['db_name']};charset={$config['charset']}";
-        }
-
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -24,9 +18,23 @@ class Database {
         ];
 
         try {
-            $this->conn = new PDO($dsn, $config['username'], $config['password'], $options);
+            if ($dbType === 'postgresql' || $dbType === 'pgsql') {
+                // PostgreSQL (Render)
+                $host = getenv('DB_HOST') ?: $config['host'];
+                $port = getenv('DB_PORT') ?: 5432;
+                $dbname = getenv('DB_NAME') ?: $config['db_name'];
+                $user = getenv('DB_USERNAME') ?: $config['username'];
+                $pass = getenv('DB_PASSWORD') ?: $config['password'];
+                $sslmode = getenv('DB_SSLMODE') ?: 'require';
+
+                $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode={$sslmode}";
+                $this->conn = new PDO($dsn, $user, $pass, $options);
+            } else {
+                // MySQL (local)
+                $dsn = "mysql:host={$config['host']};dbname={$config['db_name']};charset={$config['charset']}";
+                $this->conn = new PDO($dsn, $config['username'], $config['password'], $options);
+            }
         } catch (\PDOException $e) {
-            // En un entorno de producción, logear el error, no exponerlo.
             die("Error de conexión a la base de datos: " . $e->getMessage());
         }
     }
