@@ -1219,7 +1219,7 @@ function togglePeriodoDetail(idPeriodo) {
                                     <input type="hidden" name="id_periodo" value="<?= $periodoActualVista['id_periodo'] ?>">
                                     <div class="flex-1">
                                         <label for="fecha_no_pago" class="block text-xs font-medium text-gray-700 mb-1">Fecha</label>
-                                        <input type="date" id="fecha_no_pago" name="fecha" min="<?= $periodoActualVista['fecha_inicio_periodo'] ?>" max="<?= $periodoActualVista['fecha_fin_periodo'] ?>" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" required>
+                                    <input type="date" id="fecha_no_pago" name="fecha" value="<?= date('Y-m-d') ?>" min="2000-01-01" max="2030-12-31" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" required>
                                     </div>
                                     <div class="flex-1">
                                         <label for="observacion_no_pago" class="block text-xs font-medium text-gray-700 mb-1">Observación</label>
