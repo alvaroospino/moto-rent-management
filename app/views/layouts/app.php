@@ -1,7 +1,4 @@
 <?php
-// /app/views/layouts/app.php
-// Este archivo carga la estructura base y la vista específica.
-
 require_once __DIR__ . '/../../core/Session.php';
 
 if (!Session::isLoggedIn()) {
@@ -399,18 +396,7 @@ if (!defined('BASE_URL')) {
             }
         });
 
-        // PWA Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('<?= BASE_URL ?>sw.js')
-                    .then((registration) => {
-                        console.log('Service Worker registrado con éxito:', registration);
-                    })
-                    .catch((error) => {
-                        console.log('Error al registrar Service Worker:', error);
-                    });
-            });
-        }
+
     </script>
 </body>
 </html>
