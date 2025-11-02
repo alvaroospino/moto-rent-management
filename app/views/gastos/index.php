@@ -40,7 +40,7 @@ if (!empty($gastos)) {
 </div>
 
 <!-- Statistics Cards -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     <div class="bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-6 shadow-sm">
         <div class="flex items-center justify-between">
             <div>
@@ -61,18 +61,6 @@ if (!empty($gastos)) {
             </div>
             <div class="bg-amber-100 p-3 rounded-full">
                 <i class="fas fa-calendar-alt text-amber-600 text-xl"></i>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6 shadow-sm">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm font-medium text-orange-700 mb-1">Este Año</p>
-                <p class="text-2xl font-bold text-orange-800">$<?= number_format($gastosEsteAnio, 2) ?></p>
-            </div>
-            <div class="bg-orange-100 p-3 rounded-full">
-                <i class="fas fa-chart-line text-orange-600 text-xl"></i>
             </div>
         </div>
     </div>
@@ -99,7 +87,8 @@ if (!empty($gastos)) {
         </div>
     </div>
 
-    <div class="overflow-x-auto">
+    <!-- Desktop Table View -->
+    <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200" id="gastosTable">
             <thead class="bg-gradient-to-r from-yellow-50 to-amber-50">
                 <tr>
@@ -226,6 +215,106 @@ if (!empty($gastos)) {
             </tbody>
         </table>
     </div>
+
+    <!-- Mobile Cards View -->
+    <div class="md:hidden space-y-4 p-4">
+        <?php if (empty($gastos)): ?>
+            <div class="text-center py-12">
+                <div class="bg-yellow-100 p-4 rounded-full mb-4 inline-block">
+                    <i class="fas fa-receipt text-yellow-600 text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No hay gastos registrados</h3>
+                <p class="text-gray-500 mb-4">Comienza registrando tu primer gasto operativo</p>
+                <a href="<?= BASE_URL ?>gastos/create" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg transition duration-200 inline-flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Registrar Primer Gasto
+                </a>
+            </div>
+        <?php else: ?>
+            <?php foreach ($gastos as $gasto): ?>
+                <div class="gasto-card bg-white rounded-xl shadow-md border border-gray-200 p-4" data-categoria="<?= htmlspecialchars($gasto['categoria']) ?>">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center">
+                            <span class="text-sm font-semibold text-gray-600">#<?= htmlspecialchars($gasto['id_gasto']) ?></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="<?= BASE_URL ?>gastos/show/<?= $gasto['id_gasto'] ?>"
+                               class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition duration-200"
+                               title="Ver detalles">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="<?= BASE_URL ?>gastos/edit/<?= $gasto['id_gasto'] ?>"
+                               class="text-yellow-600 hover:text-yellow-800 p-2 rounded-lg hover:bg-yellow-50 transition duration-200"
+                               title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="<?= BASE_URL ?>gastos/destroy/<?= $gasto['id_gasto'] ?>" method="POST" class="inline"
+                                  onsubmit="return confirm('¿Estás seguro de que deseas eliminar este gasto? Esta acción no se puede deshacer.')">
+                                <button type="submit" class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition duration-200"
+                                        title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Fecha:</span>
+                            <span class="text-sm font-medium text-gray-900 flex items-center">
+                                <i class="fas fa-calendar-day text-gray-400 mr-1"></i>
+                                <?= htmlspecialchars(date('d/m/Y', strtotime($gasto['fecha_gasto']))) ?>
+                            </span>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Monto:</span>
+                            <span class="text-lg font-bold text-green-600 flex items-center">
+                                <i class="fas fa-dollar-sign text-green-500 mr-1"></i>
+                                $<?= number_format($gasto['monto'], 2) ?>
+                            </span>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Categoría:</span>
+                            <?php
+                            $categoriaClass = 'bg-gray-100 text-gray-800';
+                            switch($gasto['categoria']) {
+                                case 'mantenimiento': $categoriaClass = 'bg-blue-100 text-blue-800'; break;
+                                case 'operativo': $categoriaClass = 'bg-green-100 text-green-800'; break;
+                                case 'general': $categoriaClass = 'bg-purple-100 text-purple-800'; break;
+                                case 'impuestos': $categoriaClass = 'bg-red-100 text-red-800'; break;
+                            }
+                            ?>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full <?= $categoriaClass ?>">
+                                <i class="fas fa-tag mr-1"></i>
+                                <?= htmlspecialchars(ucfirst($gasto['categoria'])) ?>
+                            </span>
+                        </div>
+
+                        <?php if ($gasto['id_moto']): ?>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Moto:</span>
+                                <span class="text-sm text-gray-900 flex items-center">
+                                    <i class="fas fa-motorcycle text-gray-400 mr-1"></i>
+                                    <?= htmlspecialchars($gasto['moto_placa'] ?? 'N/A') ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="border-t pt-2 mt-2">
+                            <p class="text-sm text-gray-700 line-clamp-2" title="<?= htmlspecialchars($gasto['descripcion']) ?>">
+                                <?= htmlspecialchars($gasto['descripcion']) ?>
+                            </p>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs text-gray-500">
+                            <span>Por: <?= htmlspecialchars($gasto['usuario_nombre']) ?></span>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
 </div>
 
 <script>
@@ -241,7 +330,7 @@ $(document).ready(function() {
         "columnDefs": [
             { "orderable": false, "targets": [7] } // Disable sorting on actions column
         ],
-        "dom": '<"flex flex-col md:flex-row justify-between items-center mb-4"<"flex items-center space-x-2"l><"flex items-center space-x-2"f>>rt<"flex flex-col md:flex-row justify-between items-center mt-4"<"text-sm text-gray-700"i><"flex items-center space-x-2"p>>',
+        "dom": '<"flex flex-col md:flex-row justify-between items-center mb-4"<"flex items-center space-x-2"l><"flex items-center space-x-2"f>>rt<"flex flex-col md:flex-row justify-between items-center mt-4"<"text-sm text-gray-700"i><"flex flex-col sm:flex-row justify-center sm:justify-end items-center space-y-2 sm:space-y-0 sm:space-x-2"p>>',
         "initComplete": function() {
             // Custom styling for DataTable elements
             $('.dataTables_length select').addClass('px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent');

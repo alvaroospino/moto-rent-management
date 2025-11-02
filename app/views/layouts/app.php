@@ -28,7 +28,6 @@ if (!defined('BASE_URL')) {
     <link rel="manifest" href="<?= BASE_URL ?>manifest.json">
     <!-- Tailwind CDN (rápido para desarrollo). Mantengo el enlace local como fallback si existe -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="<?= BASE_URL ?>assets/css/tailwind.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.tailwindcss.min.css">
@@ -39,8 +38,6 @@ if (!defined('BASE_URL')) {
     <script src="https://cdn.datatables.net/1.10.25/js/dataTables.tailwindcss.min.js"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Preloader Script -->
-    <script src="<?= BASE_URL ?>assets/js/preloader.js"></script>
     <!-- Global Variables -->
     <script>
         const BASE_URL = '<?= BASE_URL ?>';
@@ -92,6 +89,7 @@ if (!defined('BASE_URL')) {
                 $isClientes = strpos($currentPath, '/clientes') !== false;
                 $isContratos = strpos($currentPath, '/contratos') !== false;
                 $isGastos = strpos($currentPath, '/gastos') !== false;
+                $isMovimientosPersonales = strpos($currentPath, '/movimientos-personales') !== false;
                 ?>
                 <a href="<?= BASE_URL ?>dashboard" class="flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 hover:bg-indigo-50 group <?php if ($isDashboard) echo 'bg-indigo-100 text-indigo-700'; ?>">
                     <i class="fas fa-tachometer-alt text-xl <?php if ($isDashboard) echo 'text-indigo-700'; else echo 'text-gray-600'; ?> group-hover:text-indigo-600 mb-1"></i>
@@ -171,6 +169,14 @@ if (!defined('BASE_URL')) {
                             <span class="sidebar-label font-medium text-gray-200 group-hover:text-white transition-colors duration-200">Gastos</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="<?= BASE_URL ?>movimientos-personales" class="sidebar-link flex items-center p-3 rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-indigo-600/20 hover:to-purple-600/20 hover:shadow-lg hover:scale-105 group">
+                            <div class="sidebar-icon w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center mr-3 shadow-md group-hover:shadow-lg transition-all duration-200">
+                                <i class="fas fa-exchange-alt text-white text-sm"></i>
+                            </div>
+                            <span class="sidebar-label font-medium text-gray-200 group-hover:text-white transition-colors duration-200">Movimientos Personales</span>
+                        </a>
+                    </li>
                     <?php if ($userRole === 'administrador'): ?>
                     <li class="pt-4">
                         <span class="sidebar-section text-xs tracking-wider font-bold uppercase text-gray-400 block px-3 mb-2 border-l-2 border-purple-500 pl-2">Administración</span>
@@ -213,9 +219,9 @@ if (!defined('BASE_URL')) {
                 </div>
                 <div class="flex items-center space-x-3">
                     <!-- Estado de conexión -->
-                    <div class="hidden md:flex items-center space-x-2">
-                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Conectado"></div>
-                        <span class="text-xs text-gray-600">En línea</span>
+                    <div id="connection-status" class="hidden md:flex items-center space-x-2">
+                        <div id="connection-indicator" class="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Conectado"></div>
+                        <span id="connection-text" class="text-xs text-gray-600">En línea</span>
                     </div>
 
                     <!-- Notificaciones -->
@@ -396,6 +402,36 @@ if (!defined('BASE_URL')) {
             }
         });
 
+        // Estado de conexión en tiempo real
+        function updateConnectionStatus() {
+            const connectionStatus = document.getElementById('connection-status');
+            const connectionIndicator = document.getElementById('connection-indicator');
+            const connectionText = document.getElementById('connection-text');
+
+            if (!connectionStatus || !connectionIndicator || !connectionText) return;
+
+            const isOnline = navigator.onLine;
+
+            if (isOnline) {
+                connectionIndicator.className = 'w-2 h-2 bg-green-500 rounded-full animate-pulse';
+                connectionText.textContent = 'En línea';
+                connectionText.className = 'text-xs text-gray-600';
+            } else {
+                connectionIndicator.className = 'w-2 h-2 bg-red-500 rounded-full animate-pulse';
+                connectionText.textContent = 'Sin conexión';
+                connectionText.className = 'text-xs text-red-600';
+            }
+        }
+
+        // Actualizar estado de conexión
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+
+        // Inicializar estado de conexión
+        updateConnectionStatus();
+
+        // Verificar conexión periódicamente
+        setInterval(updateConnectionStatus, 30000); // Cada 30 segundos
 
     </script>
 </body>

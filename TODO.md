@@ -1,25 +1,16 @@
-# Mejora al Modal de Periodos de Contratos
+# TODO: Implement Real-Time Connection Status Monitoring
 
-## Tareas Pendientes
+## Completed Tasks
+- [x] Add IDs to connection status elements in app.php for JavaScript access
+- [x] Implement updateConnectionStatus() function to check navigator.onLine
+- [x] Add event listeners for 'online' and 'offline' events
+- [x] Initialize connection status on page load
+- [x] Add periodic connection check every 30 seconds
+- [x] Update UI dynamically (green for online, red for offline)
 
-### 1. Actualizar Controlador (ContratoController.php)
-- [ ] Modificar el método `detail` para incluir pagos por periodo en `$historialPeriodos`
-- [ ] Agregar consulta para obtener pagos de cada periodo usando `PagoContrato::getPagosPorContrato` filtrados por periodo
+## Issues Identified and Fixed
+- **Service Worker Errors**: The SW was trying to cache non-existent files like `/`, `/dashboard`, `/assets/css/tailwind.css` which caused 404 errors when offline.
+- **Fixed**: Downloaded Tailwind CSS locally and updated STATIC_ASSETS array to include all existing files that can be cached.
 
-### 2. Modificar Vista (app/views/contratos/detail.php)
-- [ ] Cambiar el modal de historial para mostrar tarjetas en lugar de lista
-- [ ] Cada tarjeta mostrará: número de periodo, fechas, estado, cuota acumulada
-- [ ] Agregar funcionalidad de expand/collapse con JavaScript
-- [ ] En el detalle expandido mostrar:
-  - Lista de pagos realizados en el periodo
-  - Días marcados como no_pago
-  - Tabla de días con estados
-
-### 3. Agregar JavaScript (contratos.js)
-- [ ] Función para expandir/colapsar tarjetas
-- [ ] Animaciones suaves para la transición
-
-### 4. Pruebas
-- [ ] Verificar que el modal se carga correctamente
-- [ ] Probar expand/collapse de tarjetas
-- [ ] Confirmar que se muestran pagos y días no_pago
+## Summary
+Real-time connection status monitoring has been successfully implemented in the application header. The indicator shows "En línea" with a green pulsing dot when online, and "Sin conexión" with a red pulsing dot when offline. The status updates automatically when the connection changes and is checked periodically. Service Worker cache issues have been resolved by removing references to non-existent assets.

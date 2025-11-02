@@ -89,6 +89,15 @@ $app->get('/gastos/edit/(\d+)', 'GastoController@edit');
 $app->post('/gastos/update/(\d+)', 'GastoController@update');
 $app->post('/gastos/destroy/(\d+)', 'GastoController@destroy');
 
+// Rutas de Movimientos Personales (Módulo 7 - NUEVAS)
+$app->get('/movimientos-personales', 'MovimientoPersonalController@index');
+$app->get('/movimientos-personales/create', 'MovimientoPersonalController@create');
+$app->post('/movimientos-personales/store', 'MovimientoPersonalController@store');
+$app->get('/movimientos-personales/show/(\d+)', 'MovimientoPersonalController@show');
+$app->get('/movimientos-personales/edit/(\d+)', 'MovimientoPersonalController@edit');
+$app->post('/movimientos-personales/update/(\d+)', 'MovimientoPersonalController@update');
+$app->post('/movimientos-personales/destroy/(\d+)', 'MovimientoPersonalController@destroy');
+
 // Rutas de Reportes (Módulo 6 - NUEVAS)
 $app->get('/reportes', 'ReporteController@index');
 // $app->get('/reportes/export', 'ReporteController@export'); // Ruta para exportación
