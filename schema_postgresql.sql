@@ -56,7 +56,8 @@ CREATE TABLE IF NOT EXISTS contratos (
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     abono_capital_mensual DECIMAL(10,2) NOT NULL,
     ganancia_mensual DECIMAL(10,2) NOT NULL,
-    cuota_diaria DECIMAL(12,2)
+    cuota_diaria DECIMAL(12,2),
+    observaciones TEXT
 );
 
 -- Table: periodos_contrato

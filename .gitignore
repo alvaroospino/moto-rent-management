@@ -1,6 +1,7 @@
 # Environment variables
 .env
 
+
 # Logs
 *.log
 logs/
@@ -29,3 +30,6 @@ node_modules/
 # Temporary files
 tmp/
 temp/
+
+# Database migration scripts
+add_column.sql

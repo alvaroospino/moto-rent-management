@@ -395,10 +395,17 @@
     </div>
 
     <!-- Back Button -->
-    <a href="<?= BASE_URL ?>contratos" class="back-button">
-        <i class="fas fa-arrow-left"></i>
-        Volver
-    </a>
+    <div class="flex justify-between items-center mb-4">
+        <a href="<?= BASE_URL ?>contratos" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            Volver
+        </a>
+        <?php if ($contrato['estado'] === 'activo'): ?>
+        <a href="<?= BASE_URL ?>contratos/edit/<?= $contrato['id_contrato'] ?>" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 shadow-lg hover:shadow-xl">
+            <i class="fas fa-edit mr-2"></i> Editar Contrato
+        </a>
+        <?php endif; ?>
+    </div>
 
     <!-- Financial Summary -->
     <div class="financial-summary">

@@ -389,6 +389,102 @@ class ContratoController {
         require_once __DIR__ . '/../views/layouts/app.php';
     }
 
+    public function edit($id) {
+        // Verificar permisos
+        Session::checkPermission(['administrador', 'operador']);
+
+        $contratoModel = new Contrato();
+        $contrato = $contratoModel->find($id);
+        if (!$contrato) {
+            $_SESSION['error'] = 'Contrato no encontrado.';
+            header('Location: ' . BASE_URL . 'contratos');
+            exit;
+        }
+
+        // Solo permitir editar contratos activos
+        if ($contrato['estado'] !== 'activo') {
+            $_SESSION['error'] = 'Solo se pueden editar contratos activos.';
+            header('Location: ' . BASE_URL . 'contratos/details/' . $id);
+            exit;
+        }
+
+        // Obtener información relacionada
+        $clienteModel = new Cliente();
+        $cliente = $clienteModel->find($contrato['id_cliente']);
+        $motoModel = new Moto();
+        $moto = $motoModel->find($contrato['id_moto']);
+
+        // Hacer variables disponibles para la vista
+        extract(compact('contrato', 'cliente', 'moto'));
+
+        // Carga el layout principal, inyectando la vista específica
+        $contentView = __DIR__ . '/../views/contratos/edit.php';
+        $title = 'Editar Contrato';
+
+        require_once __DIR__ . '/../views/layouts/app.php';
+    }
+
+    public function update($id) {
+        // Verificar permisos
+        Session::checkPermission(['administrador', 'operador']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . 'contratos');
+            exit;
+        }
+
+        $contratoModel = new Contrato();
+        $contrato = $contratoModel->find($id);
+        if (!$contrato) {
+            $_SESSION['error'] = 'Contrato no encontrado.';
+            header('Location: ' . BASE_URL . 'contratos');
+            exit;
+        }
+
+        // Solo permitir editar contratos activos
+        if ($contrato['estado'] !== 'activo') {
+            $_SESSION['error'] = 'Solo se pueden editar contratos activos.';
+            header('Location: ' . BASE_URL . 'contratos/details/' . $id);
+            exit;
+        }
+
+        // Validar datos requeridos
+        $required = ['valor_vehiculo', 'cuota_mensual', 'abono_capital_mensual', 'ganancia_mensual'];
+        foreach ($required as $field) {
+            if (!isset($_POST[$field]) || empty($_POST[$field])) {
+                $_SESSION['error'] = "El campo $field es requerido.";
+                header('Location: ' . BASE_URL . 'contratos/edit/' . $id);
+                exit;
+            }
+        }
+
+        try {
+            // Preparar datos para actualización
+            $updateData = [
+                'valor_vehiculo' => (float)$_POST['valor_vehiculo'],
+                'cuota_mensual' => (float)$_POST['cuota_mensual'],
+                'abono_capital_mensual' => (float)$_POST['abono_capital_mensual'],
+                'ganancia_mensual' => (float)$_POST['ganancia_mensual']
+            ];
+
+            // Agregar observaciones si se proporcionaron
+            if (isset($_POST['observaciones'])) {
+                $updateData['observaciones'] = trim($_POST['observaciones']);
+            }
+
+            // Actualizar contrato
+            $contratoModel->update($id, $updateData);
+
+            $_SESSION['success'] = 'Contrato actualizado exitosamente.';
+            header('Location: ' . BASE_URL . 'contratos/details/' . $id);
+
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Error al actualizar el contrato: ' . $e->getMessage();
+            header('Location: ' . BASE_URL . 'contratos/edit/' . $id);
+        }
+        exit;
+    }
+
     public function cerrarPeriodo($idContrato, $idPeriodo) {
 
         header('Content-Type: application/json');
