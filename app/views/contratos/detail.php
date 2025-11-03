@@ -668,7 +668,7 @@
 </style>
 
 <div class="min-h-screen bg-gray-50 py-6">
-    <div class="container mx-auto px-4 max-w-7xl">
+    <div class="container mx-auto max-w-7xl">
 
         <!-- Breadcrumb -->
         <nav class="flex mb-4 text-sm" aria-label="Breadcrumb">
@@ -990,9 +990,17 @@ function togglePeriodoDetail(idPeriodo) {
                         <i class="fas fa-arrow-left"></i>
                         Volver
                     </a>
+                    <a href="<?= BASE_URL ?>contratos/details/<?= $contrato['id_contrato'] ?? '' ?>" class="btn-secondary">
+                        <i class="fas fa-info-circle"></i>
+                        Detalles Completos
+                    </a>
                     <a href="<?= BASE_URL ?>pagos/contrato/<?= $contrato['id_contrato'] ?? '' ?>" class="btn-primary">
                         <i class="fas fa-dollar-sign"></i>
                         Pago
+                    </a>
+                    <a href="<?= BASE_URL ?>prestamos/<?= $contrato['id_contrato'] ?? '' ?>" class="btn-secondary">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        Préstamo
                     </a>
                     <a href="<?= BASE_URL ?>contratos/edit/<?= $contrato['id_contrato'] ?? '' ?>" class="btn-secondary">
                         <i class="fas fa-edit"></i>
@@ -1071,117 +1079,7 @@ function togglePeriodoDetail(idPeriodo) {
                     </div>
                 </div>
 
-                <!-- Detalles del Contrato (Ancho completo con grid) -->
-                <div class="section-card mb-6">
-                    <div class="section-card-header">
-                        <div class="section-card-header-icon bg-indigo-100 text-indigo-600">
-                            <i class="fas fa-info-circle"></i>
-                        </div>
-                        <h2>Detalles del Contrato</h2>
-                    </div>
-                    <div class="section-card-body">
-                        <!-- Grid de detalles principales -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                            <!-- Estado -->
-                            <div class="detail-card">
-                                <div class="detail-card-icon bg-green-100 text-green-600">
-                                    <i class="fas fa-check-circle"></i>
-                                </div>
-                                <div class="detail-card-content">
-                                    <div class="detail-card-label">Estado</div>
-                                    <span class="status-badge inline-flex px-2 py-1 text-xs font-semibold rounded-md w-fit
-                                        <?php
-                                        switch($contrato['estado'] ?? 'desconocido') {
-                                            case 'activo':
-                                                echo 'bg-green-100 text-green-800 border border-green-200';
-                                                break;
-                                            case 'finalizado':
-                                                echo 'bg-blue-100 text-blue-800 border border-blue-200';
-                                                break;
-                                            default:
-                                                echo 'bg-gray-100 text-gray-800 border border-gray-200';
-                                        }
-                                        ?>">
-                                        <i class="fas fa-circle text-xs mr-1"></i>
-                                        <?= ucfirst(htmlspecialchars($contrato['estado'] ?? 'Desconocido')) ?>
-                                    </span>
-                                </div>
-                            </div>
 
-                            <!-- Fecha de Inicio -->
-                            <div class="detail-card">
-                                <div class="detail-card-icon bg-blue-100 text-blue-600">
-                                    <i class="fas fa-calendar-alt"></i>
-                                </div>
-                                <div class="detail-card-content">
-                                    <div class="detail-card-label">Fecha de Inicio</div>
-                                    <p class="detail-card-value"><?= date('d/m/Y', strtotime($contrato['fecha_inicio'] ?? 'now')) ?></p>
-                                </div>
-                            </div>
-
-                            <!-- Plazo Total -->
-                            <div class="detail-card">
-                                <div class="detail-card-icon bg-purple-100 text-purple-600">
-                                    <i class="fas fa-hourglass-half"></i>
-                                </div>
-                                <div class="detail-card-content">
-                                    <div class="detail-card-label">Plazo Total</div>
-                                    <p class="detail-card-value"><?= $contrato['plazo_meses'] ?? 0 ?> meses</p>
-                                </div>
-                            </div>
-
-                            <!-- Valor del Vehículo -->
-                            <div class="detail-card highlight">
-                                <div class="detail-card-icon bg-green-100 text-green-600">
-                                    <i class="fas fa-motorcycle"></i>
-                                </div>
-                                <div class="detail-card-content">
-                                    <div class="detail-card-label">Valor del Vehículo</div>
-                                    <p class="detail-card-value text-green-600">$<?= number_format($contrato['valor_vehiculo'] ?? 0, 0, ',', '.') ?></p>
-                                </div>
-                            </div>
-
-                            <!-- Capital Amortizado -->
-                            <div class="detail-card highlight">
-                                <div class="detail-card-icon bg-indigo-100 text-indigo-600">
-                                    <i class="fas fa-chart-line"></i>
-                                </div>
-                                <div class="detail-card-content">
-                                    <div class="detail-card-label">Capital Amortizado</div>
-                                    <p class="detail-card-value text-indigo-600">$<?= number_format($contrato['saldo_restante'] ?? 0, 0, ',', '.') ?></p>
-                                </div>
-                            </div>
-
-                            <!-- Saldo Pendiente -->
-                            <div class="detail-card highlight">
-                                <div class="detail-card-icon bg-red-100 text-red-600">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                </div>
-                                <div class="detail-card-content">
-                                    <div class="detail-card-label">Saldo Pendiente</div>
-                                    <p class="detail-card-value text-red-600">$<?= number_format(($contrato['valor_vehiculo'] ?? 0) - ($contrato['saldo_restante'] ?? 0), 0, ',', '.') ?></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Observaciones (si existen) -->
-                        <?php if (!empty($contrato['observaciones'])): ?>
-                            <div class="border-t pt-4">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <i class="fas fa-sticky-note text-amber-600"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Observaciones</div>
-                                        <p class="text-sm text-gray-700 bg-amber-50 p-3 rounded-md border border-amber-200">
-                                            <?= nl2br(htmlspecialchars($contrato['observaciones'])) ?>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
 
                 <?php
                 // Determinar periodo actual de la lista disponible
@@ -1519,109 +1417,7 @@ function togglePeriodoDetail(idPeriodo) {
                     </div>
                 </div>
 
-                <!-- Cliente -->
-                <?php if ($cliente): ?>
-                <div class="sidebar-card">
-                    <div class="sidebar-card-header">
-                        <h3>
-                            <i class="fas fa-user text-indigo-600"></i>
-                            Cliente
-                        </h3>
-                    </div>
-                    <div class="sidebar-card-body">
-                        <div class="text-center mb-3">
-                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-2 border-2 border-white shadow">
-                                <i class="fas fa-user text-lg text-indigo-600"></i>
-                            </div>
-                            <div class="text-sm font-bold text-gray-900">
-                                <?= htmlspecialchars($cliente['nombre_completo'] ?? 'N/A') ?>
-                            </div>
-                        </div>
 
-                        <div class="space-y-2">
-                            <div class="sidebar-info-item">
-                                <span class="sidebar-info-label">
-                                    <i class="fas fa-id-card text-xs"></i>
-                                    ID
-                                </span>
-                                <span class="sidebar-info-value text-xs"><?= htmlspecialchars($cliente['identificacion'] ?? 'N/A') ?></span>
-                            </div>
-
-                            <div class="sidebar-info-item">
-                                <span class="sidebar-info-label">
-                                    <i class="fas fa-phone text-xs"></i>
-                                    Tel
-                                </span>
-                                <a href="tel:<?= htmlspecialchars($cliente['telefono'] ?? '') ?>" class="sidebar-info-value text-xs text-indigo-600 hover:text-indigo-700">
-                                    <?= htmlspecialchars($cliente['telefono'] ?? 'N/A') ?>
-                                </a>
-                            </div>
-
-                            <div class="sidebar-info-item">
-                                <span class="sidebar-info-label">
-                                    <i class="fas fa-map-marker-alt text-xs"></i>
-                                    Dirección
-                                </span>
-                                <span class="sidebar-info-value text-xs text-right"><?= htmlspecialchars($cliente['direccion'] ?? 'N/A') ?></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <!-- Vehículo -->
-                <?php if ($moto): ?>
-                <div class="sidebar-card">
-                    <div class="sidebar-card-header">
-                        <h3>
-                            <i class="fas fa-motorcycle text-indigo-600"></i>
-                            Vehículo
-                        </h3>
-                    </div>
-                    <div class="sidebar-card-body">
-                        <div class="text-center mb-3">
-                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 border-2 border-white shadow">
-                                <i class="fas fa-motorcycle text-lg text-indigo-600"></i>
-                            </div>
-                            <div class="text-sm font-bold text-gray-900">
-                                <?= htmlspecialchars(($moto['marca'] ?? '') . ' ' . ($moto['modelo'] ?? '')) ?>
-                            </div>
-                            <div class="text-xs text-gray-500 mt-1">
-                                <i class="fas fa-certificate mr-1"></i>
-                                <?= htmlspecialchars($moto['placa'] ?? 'N/A') ?>
-                            </div>
-                        </div>
-
-                        <div class="space-y-2">
-                            <div class="sidebar-info-item">
-                                <span class="sidebar-info-label">
-                                    <i class="fas fa-info-circle text-xs"></i>
-                                    Estado
-                                </span>
-                                <span class="badge-small
-                                    <?php
-                                    switch($moto['estado']) {
-                                        case 'activo':
-                                            echo 'badge-green';
-                                            break;
-                                        case 'alquilada':
-                                            echo 'badge-blue';
-                                            break;
-                                        case 'mantenimiento':
-                                            echo 'badge-amber';
-                                            break;
-                                        default:
-                                            echo 'badge-blue';
-                                    }
-                                    ?>">
-                                    <i class="fas fa-circle"></i>
-                                    <?= ucfirst(htmlspecialchars($moto['estado'] ?? 'desconocido')) ?>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?php endif; ?>
 
                 <!-- Acciones Rápidas -->
                 <div class="sidebar-card">

@@ -124,4 +124,21 @@ class Gasto extends BaseModel {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Obtiene el total de gastos acumulados para una moto específica
+     * @param int $idMoto
+     * @return float
+     */
+    public function getTotalGastosPorMotoTotal(int $idMoto): float {
+        $sql = "
+            SELECT SUM(monto)
+            FROM {$this->table}
+            WHERE id_moto = :id_moto
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id_moto', $idMoto, PDO::PARAM_INT);
+        $stmt->execute();
+        return (float)($stmt->fetchColumn() ?? 0.00);
+    }
 }

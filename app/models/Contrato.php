@@ -424,7 +424,7 @@ class Contrato extends BaseModel {
             ORDER BY mes ASC
         ";
         // --- FIN AJUSTE ---
-        
+
         $stmt = $contrato->db->query($sql);
         $ingresos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -455,5 +455,35 @@ class Contrato extends BaseModel {
         }
 
         return $rentabilidad;
+    }
+
+    /**
+     * Calcular utilidad neta de un contrato específico (ingresos totales - gastos totales de la moto)
+     * @param int $idContrato
+     * @return array
+     */
+    public static function getUtilidadContrato($idContrato) {
+        $contratoModel = new self();
+        $contrato = $contratoModel->find($idContrato);
+        if (!$contrato) {
+            return ['error' => 'Contrato no encontrado'];
+        }
+
+        // Ingresos totales del contrato
+        $ingresosTotales = PagoContrato::getTotalPagadoEnContrato($idContrato);
+
+        // Gastos totales de la moto asociada al contrato
+        $gastoModel = new Gasto();
+        $gastosTotales = $gastoModel->getTotalGastosPorMotoTotal($contrato['id_moto']);
+
+        // Utilidad neta
+        $utilidadNeta = $ingresosTotales - $gastosTotales;
+
+        return [
+            'ingresos_totales' => $ingresosTotales,
+            'gastos_totales' => $gastosTotales,
+            'utilidad_neta' => $utilidadNeta,
+            'rentabilidad' => $ingresosTotales > 0 ? (($utilidadNeta / $ingresosTotales) * 100) : 0
+        ];
     }
 }

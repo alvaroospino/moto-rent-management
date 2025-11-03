@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/Cliente.php';
 require_once __DIR__ . '/../models/Moto.php';
 require_once __DIR__ . '/../models/PeriodoContrato.php';
 require_once __DIR__ . '/../models/PagoContrato.php';
+require_once __DIR__ . '/../models/Prestamo.php';
 
 class ContratoController {
 
@@ -340,6 +341,52 @@ class ContratoController {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function details($id) {
+        // Verificar permisos
+        Session::checkPermission(['administrador', 'operador']);
+
+        $contratoModel = new Contrato();
+        $contrato = $contratoModel->find($id);
+        if (!$contrato) {
+            $_SESSION['error'] = 'Contrato no encontrado.';
+            header('Location: ' . BASE_URL . 'contratos');
+            exit;
+        }
+
+        // Obtener información relacionada
+        $clienteModel = new Cliente();
+        $cliente = $clienteModel->find($contrato['id_cliente']);
+        $motoModel = new Moto();
+        $moto = $motoModel->find($contrato['id_moto']);
+
+        // Calcular utilidad del contrato
+        $utilidad = Contrato::getUtilidadContrato($id);
+
+        // Calcular total a pagar (cuota mensual * plazo meses)
+        $total_a_pagar = $contrato['cuota_mensual'] * $contrato['plazo_meses'];
+
+        // Obtener total de préstamos activos del contrato
+        $total_prestamos = Prestamo::getTotalPrestamosActivos($id);
+
+        // El total a pagar real incluye el valor del contrato + préstamos
+        $total_a_pagar_real = $total_a_pagar + $total_prestamos;
+
+        // Calcular total pagado hasta ahora
+        $total_pagado = PagoContrato::getTotalPagadoEnContrato($id);
+
+        // Calcular saldo restante de la deuda total
+        $saldo_restante_deuda_total = $total_a_pagar_real - $total_pagado;
+
+        // Hacer variables disponibles para la vista
+        extract(compact('contrato', 'cliente', 'moto', 'utilidad', 'total_a_pagar', 'total_prestamos', 'total_pagado', 'saldo_restante_deuda_total'));
+
+        // Carga el layout principal, inyectando la vista específica
+        $contentView = __DIR__ . '/../views/contratos/details.php';
+        $title = 'Detalles Completos del Contrato';
+
+        require_once __DIR__ . '/../views/layouts/app.php';
     }
 
     public function cerrarPeriodo($idContrato, $idPeriodo) {

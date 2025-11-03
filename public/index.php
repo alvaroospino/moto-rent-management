@@ -1,7 +1,4 @@
 <?php
-// /public/index.php
-
-// Cargar clases esenciales
 require_once __DIR__ . '/../app/core/Database.php';
 require_once __DIR__ . '/../app/core/Session.php';
 require_once __DIR__ . '/../app/core/App.php'; 
@@ -69,6 +66,7 @@ $app->get('/contratos', 'ContratoController@index');
 $app->get('/contratos/create', 'ContratoController@create');
 $app->post('/contratos/store', 'ContratoController@store');
 $app->get('/contratos/detail/(\d+)', 'ContratoController@detail');
+$app->get('/contratos/details/(\d+)', 'ContratoController@details');
 $app->post('/contratos/(\d+)/cerrar-periodo/(\d+)', 'ContratoController@cerrarPeriodo');
 
 // Rutas de Pagos/Préstamos (Módulo 4 )
@@ -79,6 +77,15 @@ $app->post('/pagos/marcar-no-pago', 'PagoController@marcarNoPagoDia');
 $app->get('/pagos/edit/(\d+)', 'PagoController@edit');
 $app->post('/pagos/update/(\d+)', 'PagoController@update');
 $app->post('/pagos/delete/(\d+)', 'PagoController@delete');
+
+// Rutas de Préstamos
+$app->get('/prestamos/(\d+)', 'PrestamoController@index');
+$app->get('/prestamos/create/(\d+)', 'PrestamoController@create');
+$app->post('/prestamos/store', 'PrestamoController@store');
+$app->get('/prestamos/show/(\d+)', 'PrestamoController@show');
+$app->get('/prestamos/edit/(\d+)', 'PrestamoController@edit');
+$app->post('/prestamos/update/(\d+)', 'PrestamoController@update');
+$app->get('/prestamos/delete/(\d+)', 'PrestamoController@delete');
 
 // Rutas de Gastos Operacionales (Módulo 5 - NUEVAS)
 $app->get('/gastos', 'GastoController@index');

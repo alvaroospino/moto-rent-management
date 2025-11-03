@@ -270,7 +270,7 @@ if (!defined('BASE_URL')) {
             </header>
 
             <main class="flex-1 overflow-x-hidden overflow-y-auto pb-20 md:pb-0">
-                <div class="page-container px-3 md:px-4 lg:px-6 py-4 md:py-6">
+                <div class="page-container px-2 md:px-4 lg:px-6 py-4 md:py-6">
                     <?php
                     if (isset($contentView)) {
                         require_once $contentView;
