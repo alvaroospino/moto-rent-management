@@ -114,7 +114,7 @@ if (!defined('BASE_URL')) {
             </div>
         </nav>
 
-        <aside id="sidebar" class="fixed md:static z-30 inset-y-0 left-0 w-64 md:w-64 transform -translate-x-full md:translate-x-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col transition-all duration-300 ease-in-out overflow-hidden shadow-2xl">
+        <aside id="sidebar" class="fixed md:static z-50 inset-y-0 left-0 w-64 md:w-64 transform -translate-x-full md:translate-x-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col transition-all duration-300 ease-in-out overflow-hidden shadow-2xl">
             <div class="flex items-center justify-between p-6 border-b border-gray-700/50 sidebar-header bg-gradient-to-r from-indigo-600/20 to-purple-600/20 backdrop-blur-sm">
                 <div class="flex items-center space-x-3">
                     <img src="<?= BASE_URL ?>assets/icons/icon-192x192.png" alt="Logo" class="w-10 h-10 rounded-xl shadow-lg">
