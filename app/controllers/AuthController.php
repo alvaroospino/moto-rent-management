@@ -19,7 +19,7 @@ class AuthController {
     // Procesa el formulario de login
     public function authenticate() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: login');
+            header('Location: ' . BASE_URL . 'login');
             exit;
         }
 
@@ -38,12 +38,12 @@ class AuthController {
             Session::set('user_role', $user['rol']);
 
             // Redirigir al dashboard
-            header('Location: dashboard');
+            header('Location: ' . BASE_URL . 'dashboard');
             exit;
         } else {
             // Login fallido
             Session::set('login_error', 'Credenciales inválidas. Por favor, intente de nuevo.');
-            header('Location: login');
+            header('Location: ' . BASE_URL . 'login');
             exit;
         }
     }
@@ -52,7 +52,7 @@ class AuthController {
     public function logout() {
         Session::init();
         Session::destroy();
-        header('Location: login');
+        header('Location: ' . BASE_URL . 'login');
         exit;
     }
 }

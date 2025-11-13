@@ -15,15 +15,15 @@ class Database {
         ];
 
         try {
-            // PostgreSQL únicamente
+            // MySQL únicamente
             $host = getenv('DB_HOST') ?: $config['host'];
             $port = getenv('DB_PORT') ?: $config['port'];
             $dbname = getenv('DB_NAME') ?: $config['db_name'];
             $user = getenv('DB_USERNAME') ?: $config['username'];
             $pass = getenv('DB_PASSWORD') ?: $config['password'];
-            $sslmode = getenv('DB_SSLMODE') ?: $config['sslmode'];
+            $charset = getenv('DB_CHARSET') ?: $config['charset'];
 
-            $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode={$sslmode}";
+            $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
             $this->conn = new PDO($dsn, $user, $pass, $options);
         } catch (\PDOException $e) {
             die("Error de conexión a la base de datos: " . $e->getMessage());

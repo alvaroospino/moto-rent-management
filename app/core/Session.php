@@ -40,12 +40,12 @@ class Session {
     public static function checkPermission(array $allowedRoles) {
         if (!self::isLoggedIn()) {
             // Redirigir a login si no está autenticado
-            header('Location: /login');
+            header('Location: ' . BASE_URL . 'login');
             exit;
         }
         if (!in_array(self::getUserRole(), $allowedRoles)) {
             // Redirigir a una página de error o dashboard si no tiene permiso
-            header('Location: /dashboard?error=access_denied');
+            header('Location: ' . BASE_URL . 'dashboard?error=access_denied');
             exit;
         }
     }

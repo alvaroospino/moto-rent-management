@@ -11,13 +11,7 @@ require_once __DIR__ . '/../models/Prestamo.php';
 
 class ContratoController {
 
-    /**
-     * Obtiene el tipo de motor de la base de datos
-     */
-    private function getDatabaseType() {
-        $db = Database::getInstance()->getConnection();
-        return $db->getAttribute(PDO::ATTR_DRIVER_NAME);
-    }
+
 
    public function index() {
         // Verificar permisos
@@ -276,28 +270,15 @@ class ContratoController {
      * Obtener datos de contratos por mes
      */
     private function getContratosPorMesData() {
-        $dbType = $this->getDatabaseType();
-        if ($dbType === 'pgsql') {
-            $sql = "
-                SELECT
-                    TO_CHAR(fecha_inicio, 'YYYY-MM') as mes,
-                    COUNT(*) as cantidad
-                FROM contratos
-                WHERE fecha_inicio >= (CURRENT_DATE - INTERVAL '6 months')
-                GROUP BY TO_CHAR(fecha_inicio, 'YYYY-MM')
-                ORDER BY mes ASC
-            ";
-        } else {
-            $sql = "
-                SELECT
-                    DATE_FORMAT(fecha_inicio, '%Y-%m') as mes,
-                    COUNT(*) as cantidad
-                FROM contratos
-                WHERE fecha_inicio >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-                GROUP BY DATE_FORMAT(fecha_inicio, '%Y-%m')
-                ORDER BY mes ASC
-            ";
-        }
+        $sql = "
+            SELECT
+                DATE_FORMAT(fecha_inicio, '%Y-%m') as mes,
+                COUNT(*) as cantidad
+            FROM contratos
+            WHERE fecha_inicio >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            GROUP BY DATE_FORMAT(fecha_inicio, '%Y-%m')
+            ORDER BY mes ASC
+        ";
         $db = Database::getInstance()->getConnection();
         $stmt = $db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -307,37 +288,19 @@ class ContratoController {
      * Obtener contratos sin pagos recientes
      */
     private function getContratosSinPagosRecientes() {
-        $dbType = $this->getDatabaseType();
-        if ($dbType === 'pgsql') {
-            $sql = "
-                SELECT c.id_contrato, c.fecha_inicio, c.estado, c.valor_vehiculo, c.cuota_mensual, c.saldo_restante,
-                       cl.nombre_completo, m.placa, m.marca,
-                       CURRENT_DATE - COALESCE(MAX(pc.fecha_pago), c.fecha_inicio) as dias_sin_pago
-                FROM contratos c
-                JOIN clientes cl ON c.id_cliente = cl.id_cliente
-                JOIN motos m ON c.id_moto = m.id_moto
-                LEFT JOIN pagos_contrato pc ON c.id_contrato = pc.id_contrato
-                WHERE c.estado = 'activo'
-                GROUP BY c.id_contrato, c.fecha_inicio, c.estado, c.valor_vehiculo, c.cuota_mensual, c.saldo_restante, cl.nombre_completo, m.placa, m.marca
-                HAVING CURRENT_DATE - COALESCE(MAX(pc.fecha_pago), c.fecha_inicio) > 30
-                ORDER BY dias_sin_pago DESC
-                LIMIT 5
-            ";
-        } else {
-            $sql = "
-                SELECT c.*, cl.nombre_completo, m.placa, m.marca,
-                       DATEDIFF(CURDATE(), COALESCE(MAX(pc.fecha_pago), c.fecha_inicio)) as dias_sin_pago
-                FROM contratos c
-                JOIN clientes cl ON c.id_cliente = cl.id_cliente
-                JOIN motos m ON c.id_moto = m.id_moto
-                LEFT JOIN pagos_contrato pc ON c.id_contrato = pc.id_contrato
-                WHERE c.estado = 'activo'
-                GROUP BY c.id_contrato
-                HAVING dias_sin_pago > 30
-                ORDER BY dias_sin_pago DESC
-                LIMIT 5
-            ";
-        }
+        $sql = "
+            SELECT c.*, cl.nombre_completo, m.placa, m.marca,
+                   DATEDIFF(CURDATE(), COALESCE(MAX(pc.fecha_pago), c.fecha_inicio)) as dias_sin_pago
+            FROM contratos c
+            JOIN clientes cl ON c.id_cliente = cl.id_cliente
+            JOIN motos m ON c.id_moto = m.id_moto
+            LEFT JOIN pagos_contrato pc ON c.id_contrato = pc.id_contrato
+            WHERE c.estado = 'activo'
+            GROUP BY c.id_contrato
+            HAVING dias_sin_pago > 30
+            ORDER BY dias_sin_pago DESC
+            LIMIT 5
+        ";
         $db = Database::getInstance()->getConnection();
         $stmt = $db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

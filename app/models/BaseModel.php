@@ -39,7 +39,7 @@ class BaseModel {
         return $row;
     }
 
-    // MÉTODO CREATE PARA POSTGRESQL
+    // MÉTODO CREATE PARA MYSQL
     public function create(array $data) {
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -62,9 +62,8 @@ class BaseModel {
 
         $stmt->execute();
 
-        // PostgreSQL usa secuencias para IDs autoincrementales
-        $sequenceName = "{$this->table}_{$this->primaryKey}_seq";
-        return (int) $this->db->lastInsertId($sequenceName);
+        // MySQL usa AUTO_INCREMENT para IDs autoincrementales
+        return (int) $this->db->lastInsertId();
     }
 
 
@@ -218,46 +217,46 @@ class BaseModel {
     }
     
     // =========================================================================
-    //  FUNCIONES SQL PARA POSTGRESQL
+    //  FUNCIONES SQL PARA MYSQL
     // =========================================================================
 
     /**
      * Retorna la función SQL para formatear fecha a 'YYYY-MM'
      */
     protected function getSqlDateFormat(string $field): string {
-        // PostgreSQL usa TO_CHAR
-        return "TO_CHAR({$field}, 'YYYY-MM')";
+        // MySQL usa DATE_FORMAT
+        return "DATE_FORMAT({$field}, '%Y-%m')";
     }
 
     /**
      * Retorna la función SQL para obtener el mes del campo
      */
     protected function getSqlMonth(string $field): string {
-        // PostgreSQL usa EXTRACT
-        return "EXTRACT(MONTH FROM {$field})";
+        // MySQL usa MONTH()
+        return "MONTH({$field})";
     }
 
     /**
      * Retorna la función SQL para obtener el año del campo
      */
     protected function getSqlYear(string $field): string {
-        // PostgreSQL usa EXTRACT
-        return "EXTRACT(YEAR FROM {$field})";
+        // MySQL usa YEAR()
+        return "YEAR({$field})";
     }
 
     /**
      * Retorna la función SQL para obtener la fecha/hora actual
      */
     protected function getSqlCurrentDate(): string {
-        // PostgreSQL usa CURRENT_DATE (sin hora)
-        return "CURRENT_DATE";
+        // MySQL usa CURDATE() (sin hora)
+        return "CURDATE()";
     }
 
     /**
      * Retorna la función SQL para restar meses a una fecha (ej. hace 6 meses)
      */
     protected function getSqlDateSubMonths(string $date, int $months): string {
-        // PostgreSQL usa notación de INTERVAL
-        return "({$date} - INTERVAL '{$months} months')";
+        // MySQL usa DATE_SUB
+        return "DATE_SUB({$date}, INTERVAL {$months} MONTH)";
     }
 }

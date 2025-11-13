@@ -65,9 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Insertar usuario
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-        // Detectar tipo de base de datos para usar la función de fecha correcta
-        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-        $nowFunction = ($driver === 'pgsql') ? 'CURRENT_TIMESTAMP' : 'NOW()';
+        // Usar NOW() para MySQL
+        $nowFunction = 'NOW()';
 
         $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, email, password_hash, rol, creado_en) VALUES (?, ?, ?, ?, {$nowFunction})");
         try {

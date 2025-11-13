@@ -78,7 +78,7 @@ class App {
 
         // Si no es una ruta pública, verificar autenticación (excepto logout)
         if (!$isPublic && $uri !== 'logout' && !Session::isLoggedIn()) {
-            header('Location: /login');
+            header('Location: ' . BASE_URL . 'login');
             exit;
         }
 
