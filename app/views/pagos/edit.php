@@ -31,7 +31,7 @@ $contentView = __DIR__ . '/edit_content.php';
                 </h2>
             </div>
             <div class="p-6">
-                <form action="<?= BASE_URL ?>pagos/update/<?= $pago['id_pago'] ?>" method="POST" class="space-y-6">
+                <form action="<?= BASE_URL ?>pagos/update/<?= $pago['id_pago'] ?>" method="POST" enctype="multipart/form-data" class="space-y-6">
                     <!-- Fecha del Pago -->
                     <div>
                         <label for="fecha_pago" class="block text-sm font-medium text-gray-700 mb-2">
@@ -75,6 +75,24 @@ $contentView = __DIR__ . '/edit_content.php';
                         <p class="mt-1 text-sm text-gray-500">
                             Opcional: Agregue una descripción o concepto para este pago.
                         </p>
+                    </div>
+
+                    <!-- Comprobante (Imagen) -->
+                    <div>
+                        <label for="comprobante" class="block text-sm font-medium text-gray-700 mb-2">
+                            Comprobante de Pago
+                        </label>
+                        <input type="file" id="comprobante" name="comprobante" accept="image/*"
+                               class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        <p class="mt-1 text-sm text-gray-500">
+                            Opcional: Suba una nueva imagen del comprobante (JPG, PNG, GIF, máx. 5MB). Si no selecciona una imagen, se mantendrá la actual.
+                        </p>
+                        <?php if (!empty($pago['comprobante'])): ?>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-600">Comprobante actual:</p>
+                                <img src="<?= BASE_URL ?>uploads/comprobantes/<?= htmlspecialchars($pago['comprobante']) ?>" alt="Comprobante actual" class="max-w-xs max-h-32 border border-gray-300 rounded">
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Información del Contrato (Solo lectura) -->

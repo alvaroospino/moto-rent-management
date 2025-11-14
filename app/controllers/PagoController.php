@@ -5,7 +5,9 @@ require_once __DIR__ . '/../models/Contrato.php';
 require_once __DIR__ . '/../models/Cliente.php';
 require_once __DIR__ . '/../models/Moto.php';
 require_once __DIR__ . '/../models/Pago.php';
+require_once __DIR__ . '/../models/PagoContrato.php';
 require_once __DIR__ . '/../core/Session.php';
+require_once __DIR__ . '/../core/ImageHelper.php';
 
 class PagoController {
     
@@ -145,6 +147,41 @@ class PagoController {
             exit;
         }
 
+        // Procesar comprobante si se subió
+        $comprobantePath = null;
+        if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
+            try {
+                $file = $_FILES['comprobante'];
+
+                // Validar tipo de archivo
+                if (!ImageHelper::isValidImageType($file['name'])) {
+                    header("Location: " . BASE_URL . "contratos/detail/{$idContrato}?error=Tipo de archivo no válido. Solo se permiten imágenes JPG, PNG y GIF.");
+                    exit;
+                }
+
+                // Validar tamaño del archivo (máximo 5MB)
+                if (!ImageHelper::isValidFileSize($file['size'])) {
+                    header("Location: " . BASE_URL . "contratos/detail/{$idContrato}?error=El archivo es demasiado grande. Máximo 5MB permitido.");
+                    exit;
+                }
+
+                // Generar nombre único para el archivo
+                $filename = ImageHelper::generateUniqueFilename($file['name']);
+                $uploadDir = __DIR__ . '/../../public/uploads/comprobantes/';
+                $destinationPath = $uploadDir . $filename;
+
+                // Redimensionar y guardar imagen
+                ImageHelper::resizeImage($file['tmp_name'], $destinationPath);
+
+                // Guardar ruta relativa para la base de datos
+                $comprobantePath = 'uploads/comprobantes/' . $filename;
+
+            } catch (Exception $e) {
+                header("Location: " . BASE_URL . "contratos/detail/{$idContrato}?error=" . urlencode('Error al procesar la imagen: ' . $e->getMessage()));
+                exit;
+            }
+        }
+
         // Registrar el pago en el periodo actual
         $db = Database::getInstance()->getConnection();
         try {
@@ -157,7 +194,8 @@ class PagoController {
                 'id_usuario' => $idUsuario,
                 'fecha_pago' => $fechaPago,
                 'monto_pago' => $montoPago,
-                'concepto' => $concepto
+                'concepto' => $concepto,
+                'comprobante' => $comprobantePath
             ]);
 
             // Nota: El saldo restante se actualiza solo al cerrar el período, no con cada pago individual
@@ -169,6 +207,10 @@ class PagoController {
         } catch (Exception $e) {
             if ($db->inTransaction()) {
                 $db->rollBack();
+            }
+            // Eliminar archivo si se subió pero falló el registro
+            if ($comprobantePath && file_exists(__DIR__ . '/../../public/' . $comprobantePath)) {
+                unlink(__DIR__ . '/../../public/' . $comprobantePath);
             }
             header("Location: " . BASE_URL . "contratos/detail/{$idContrato}?error=" . urlencode('Error al registrar pago: ' . $e->getMessage()));
             exit;
@@ -340,17 +382,62 @@ class PagoController {
             exit;
         }
 
+        // Procesar comprobante si se subió uno nuevo
+        $comprobantePath = $pago['comprobante']; // Mantener el actual por defecto
+        if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
+            try {
+                $file = $_FILES['comprobante'];
+
+                // Validar tipo de archivo
+                if (!ImageHelper::isValidImageType($file['name'])) {
+                    header("Location: " . BASE_URL . "pagos/edit/{$idPago}?error=Tipo de archivo no válido. Solo se permiten imágenes JPG, PNG y GIF.");
+                    exit;
+                }
+
+                // Validar tamaño del archivo (máximo 5MB)
+                if (!ImageHelper::isValidFileSize($file['size'])) {
+                    header("Location: " . BASE_URL . "pagos/edit/{$idPago}?error=El archivo es demasiado grande. Máximo 5MB permitido.");
+                    exit;
+                }
+
+                // Generar nombre único para el archivo
+                $filename = ImageHelper::generateUniqueFilename($file['name']);
+                $uploadDir = __DIR__ . '/../../public/uploads/comprobantes/';
+                $destinationPath = $uploadDir . $filename;
+
+                // Redimensionar y guardar imagen
+                ImageHelper::resizeImage($file['tmp_name'], $destinationPath);
+
+                // Guardar ruta relativa para la base de datos
+                $comprobantePath = 'uploads/comprobantes/' . $filename;
+
+                // Eliminar el comprobante anterior si existía
+                if (!empty($pago['comprobante']) && file_exists(__DIR__ . '/../../public/' . $pago['comprobante'])) {
+                    unlink(__DIR__ . '/../../public/' . $pago['comprobante']);
+                }
+
+            } catch (Exception $e) {
+                header("Location: " . BASE_URL . "pagos/edit/{$idPago}?error=" . urlencode('Error al procesar la imagen: ' . $e->getMessage()));
+                exit;
+            }
+        }
+
         try {
             $pagoModel->updatePago($idPago, [
                 'fecha_pago' => $fechaPago,
                 'monto_pago' => $montoPago,
                 'concepto' => $concepto,
-                'id_usuario' => $idUsuario
+                'id_usuario' => $idUsuario,
+                'comprobante' => $comprobantePath
             ]);
 
             header("Location: " . BASE_URL . "contratos/detail/{$pago['id_contrato']}?success=Pago actualizado correctamente.");
             exit;
         } catch (Exception $e) {
+            // Eliminar archivo si se subió pero falló la actualización
+            if ($comprobantePath !== $pago['comprobante'] && file_exists(__DIR__ . '/../../public/' . $comprobantePath)) {
+                unlink(__DIR__ . '/../../public/' . $comprobantePath);
+            }
             header("Location: " . BASE_URL . "pagos/edit/{$idPago}?error=" . urlencode('Error al actualizar pago: ' . $e->getMessage()));
             exit;
         }

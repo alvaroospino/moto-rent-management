@@ -1,0 +1,25 @@
+<?php
+header('Content-Type: application/json');
+echo json_encode([
+  "name" => "Moto Rent Management",
+  "short_name" => "MotoRent",
+  "description" => "Sistema de gestión de alquiler de motos",
+  "start_url" => "./",
+  "scope" => "./",
+  "display" => "standalone",
+  "background_color" => "#ffffff",
+  "theme_color" => "#4f46e5",
+  "orientation" => "portrait-primary",
+  "icons" => [
+    [
+      "src" => "assets/icons/icon-192x192.png",
+      "sizes" => "192x192",
+      "type" => "image/png"
+    ],
+    [
+      "src" => "assets/icons/icon-512x512.png",
+      "sizes" => "512x512",
+      "type" => "image/png"
+    ]
+  ]
+]);

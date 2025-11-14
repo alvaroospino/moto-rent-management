@@ -28,7 +28,7 @@ $contentView = __DIR__ . '/create_content.php';
                     <p class="text-gray-600 mt-2 ml-11 md:ml-14 text-sm md:text-base">Complete los detalles del pago a registrar</p>
                 </div>
                 <div class="p-6 md:p-8">
-                    <form action="<?= BASE_URL ?>pagos/store" method="POST" class="space-y-6 md:space-y-8">
+                    <form action="<?= BASE_URL ?>pagos/store" method="POST" enctype="multipart/form-data" class="space-y-6 md:space-y-8">
                         <input type="hidden" name="id_contrato" value="<?= $contrato['id_contrato'] ?? '' ?>">
 
                         <!-- Fecha del Pago -->
@@ -71,6 +71,25 @@ $contentView = __DIR__ . '/create_content.php';
                             <p class="mt-2 text-sm text-gray-500 flex items-center">
                                 <i class="fas fa-info-circle mr-1"></i>
                                 Ingrese el monto que el cliente está pagando hoy
+                            </p>
+                        </div>
+
+                        <!-- Comprobante (Imagen) -->
+                        <div class="group">
+                            <label for="comprobante" class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fas fa-image mr-2 text-green-600"></i>
+                                Comprobante de Pago
+                            </label>
+                            <div class="relative">
+                                <input type="file" id="comprobante" name="comprobante" accept="image/*"
+                                       class="block w-full pl-4 pr-12 py-3 md:py-4 border-2 border-gray-200 rounded-xl shadow-sm focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-300 text-base md:text-lg hover:border-green-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                    <i class="fas fa-upload text-gray-400"></i>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-500 flex items-center">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Suba una imagen del comprobante de pago (opcional, JPG, PNG, GIF, máx. 5MB)
                             </p>
                         </div>
 

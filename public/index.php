@@ -67,6 +67,7 @@ $app->get('/contratos/create', 'ContratoController@create');
 $app->post('/contratos/store', 'ContratoController@store');
 $app->get('/contratos/detail/(\d+)', 'ContratoController@detail');
 $app->get('/contratos/details/(\d+)', 'ContratoController@details');
+$app->get('/contratos/periodos/(\d+)', 'ContratoController@periodos');
 $app->get('/contratos/edit/(\d+)', 'ContratoController@edit');
 $app->post('/contratos/update/(\d+)', 'ContratoController@update');
 $app->post('/contratos/(\d+)/cerrar-periodo/(\d+)', 'ContratoController@cerrarPeriodo');

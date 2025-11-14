@@ -9,11 +9,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso al Sistema - Moto Rent</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= BASE_URL ?>assets/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?= BASE_URL ?>assets/icons/icon-192x192.png">
     <!-- Tailwind CDN (rápido para desarrollo). Mantengo el enlace local como fallback si existe -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="/assets/css/tailwind.css" rel="stylesheet">
+    <link href="<?= BASE_URL ?>assets/css/tailwind.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-br from-indigo-100 via-white to-purple-100 min-h-screen">
     <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -21,7 +21,7 @@
             <!-- Logo Section -->
             <div class="text-center">
                 <div class="mx-auto w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg mb-6">
-                    <img src="/assets/icons/icon-192x192.png" alt="Moto Rent Logo" class="w-16 h-16 rounded-full">
+                    <img src="<?= BASE_URL ?>assets/icons/icon-192x192.png" alt="Moto Rent Logo" class="w-16 h-16 rounded-full">
                 </div>
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Moto Rent</h1>
                 <p class="text-gray-600">Sistema de Gestión de Alquiler de Motos</p>

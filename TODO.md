@@ -1,31 +1,38 @@
-# Migración de PostgreSQL a MySQL
+# Reorganización de la Página de Periodos
 
 ## Tareas Pendientes
 
-### 1. Configuración de Base de Datos
-- [x] Actualizar `config/database.php` para MySQL (puerto 3306, usuario root)
-- [x] Actualizar `app/core/Database.php` para DSN MySQL
+### 1. Agregar Dashboard de Resumen
+- [ ] Crear sección de resumen con métricas clave del contrato
+- [ ] Mostrar estadísticas generales: periodos totales, abiertos, cerrados
+- [ ] Agregar indicadores visuales para estado general del contrato
 
-### 2. Modelos y Lógica de Base de Datos
-- [x] Actualizar `app/models/BaseModel.php` - cambiar funciones SQL de PostgreSQL a MySQL
-- [x] Revisar y actualizar modelos específicos si es necesario
-- [x] Actualizar `app/models/Contrato.php` - cambiar DATEDIFF de PostgreSQL a MySQL
+### 2. Implementar Sistema de Pestañas
+- [ ] Crear pestañas para separar "Periodos Activos" y "Historial Completo"
+- [ ] Agregar funcionalidad JavaScript para cambiar entre pestañas
+- [ ] Estilizar pestañas con diseño moderno
 
-### 3. Controladores
-- [x] Actualizar `app/controllers/ContratoController.php` - remover lógica condicional pgsql
-- [x] Actualizar `register.php` - remover lógica condicional pgsql
+### 3. Mejorar Jerarquía Visual
+- [ ] Reorganizar información con encabezados más claros
+- [ ] Agregar iconos descriptivos para cada sección
+- [ ] Mejorar espaciado y agrupación de elementos
 
-### 4. Esquema de Base de Datos
-- [x] Crear `schema_mysql.sql` basado en `schema_postgresql.sql`
-- [x] Actualizar tipos de datos y sintaxis para MySQL
+### 4. Reorganizar Información por Periodo
+- [ ] Crear tarjetas más informativas para cada periodo
+- [ ] Agregar resumen visible sin necesidad de expandir
+- [ ] Mejorar presentación de métricas por periodo
 
-### 5. Archivos Adicionales
-- [x] Revisar otros archivos PHP por lógica específica de PostgreSQL
-- [x] Actualizar Dockerfile si es necesario
-- [x] Crear vistas faltantes para préstamos (show.php, edit.php)
+### 5. Optimizar Detalles Expandidos
+- [ ] Reorganizar información dentro de detalles expandidos
+- [ ] Agregar pestañas internas para "Pagos" y "Días"
+- [ ] Mejorar legibilidad de listas de pagos y días
 
-### 6. Pruebas
-- [x] Probar sintaxis PHP de archivos modificados
-- [ ] Probar conexión a MySQL
-- [ ] Ejecutar migración de datos si es necesario
-- [ ] Verificar funcionalidad completa
+### 6. Agregar Ayudas Visuales
+- [ ] Agregar tooltips explicativos para métricas
+- [ ] Mejorar colores y badges para estados
+- [ ] Agregar indicadores de progreso visuales
+
+### 7. Testing y Validación
+- [ ] Verificar funcionalidad de pestañas
+- [ ] Probar responsividad en diferentes dispositivos
+- [ ] Validar que toda la información se muestre correctamente

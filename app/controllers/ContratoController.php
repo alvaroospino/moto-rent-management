@@ -448,6 +448,87 @@ class ContratoController {
         exit;
     }
 
+    public function periodos($id) {
+        // Verificar permisos
+        Session::checkPermission(['administrador', 'operador']);
+
+        $contratoModel = new Contrato();
+        $contrato = $contratoModel->find($id);
+        if (!$contrato) {
+            $_SESSION['error'] = 'Contrato no encontrado.';
+            header('Location: ' . BASE_URL . 'contratos');
+            exit;
+        }
+
+        // Obtener información relacionada
+        $clienteModel = new Cliente();
+        $cliente = $clienteModel->find($contrato['id_cliente']);
+        $motoModel = new Moto();
+        $moto = $motoModel->find($contrato['id_moto']);
+
+        // Obtener periodos y pagos acumulados
+        $allPeriodos = PeriodoContrato::getPeriodosPorContrato($id);
+        $totalPagado = PagoContrato::getTotalPagadoEnContrato($id);
+
+        // Filtrar para mostrar todos los periodos abiertos (disponibles para cerrar)
+        $periodos = array_filter($allPeriodos, function($periodo) {
+            return $periodo['estado_periodo'] === 'abierto';
+        });
+
+        // Preparar datos del historial completo para el modal
+        $historialPeriodos = [];
+        $pagoModel = new PagoContrato();
+        foreach ($allPeriodos as $periodo) {
+            $diasPeriodo = PeriodoContrato::getDiasPeriodo($id, $periodo['id_periodo']);
+            $habiles = 0; $pagados = 0; $pendientes = 0; $nopago = 0; $totalDia = 0;
+            foreach ($diasPeriodo as $d) {
+                if ((int)$d['es_domingo'] === 1) continue;
+                $habiles++;
+                $totalDia += (float)$d['monto_pagado'];
+                switch ($d['estado_dia']) {
+                    case 'pagado': $pagados++; break;
+                    case 'no_pago': $nopago++; break;
+                    default: $pendientes++; break;
+                }
+            }
+
+            // Obtener pagos realizados en este periodo específico
+            $pagosPeriodo = $pagoModel->where(['id_periodo' => $periodo['id_periodo']])
+                                      ->orderBy('fecha_pago', 'ASC')
+                                      ->get();
+
+            $historialPeriodos[] = [
+                'periodo' => $periodo,
+                'dias' => $diasPeriodo,
+                'pagos' => $pagosPeriodo,
+                'metricas' => [
+                    'habiles' => $habiles,
+                    'pagados' => $pagados,
+                    'pendientes' => $pendientes,
+                    'nopago' => $nopago,
+                    'total_pagado' => $totalDia
+                ]
+            ];
+        }
+
+        // Obtener historial de pagos
+        $pagoModel = new PagoContrato();
+        $pagos = $pagoModel->getPagosPorContrato($id);
+
+        // Calcular información adicional simplificada
+        $saldoRestante = $contrato['saldo_restante'];
+        $pagosRealizadosMes = Contrato::calcularPagosMesActual($id);
+
+        // Hacer variables disponibles para la vista
+        extract(compact('contrato', 'cliente', 'moto', 'periodos', 'totalPagado', 'pagos', 'saldoRestante', 'pagosRealizadosMes', 'historialPeriodos'));
+
+        // Carga el layout principal, inyectando la vista específica
+        $contentView = __DIR__ . '/../views/contratos/periodos.php';
+        $title = 'Periodos del Contrato';
+
+        require_once __DIR__ . '/../views/layouts/app.php';
+    }
+
     public function cerrarPeriodo($idContrato, $idPeriodo) {
 
         header('Content-Type: application/json');

@@ -17,7 +17,7 @@ if (!defined('BASE_URL')) {
     <link rel="icon" type="image/png" sizes="32x32" href="<?= BASE_URL ?>assets/icons/icon-192x192.png">
     <link rel="icon" type="image/png" sizes="16x16" href="<?= BASE_URL ?>assets/icons/icon-192x192.png">
     <!-- PWA Manifest -->
-    <link rel="manifest" href="<?= BASE_URL ?>manifest.json">
+    <link rel="manifest" href="<?= BASE_URL ?>manifest.php">
     <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="<?= BASE_URL ?>assets/css/tailwind.css" rel="stylesheet">

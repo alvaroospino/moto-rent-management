@@ -1213,9 +1213,9 @@ function togglePeriodoDetail(idPeriodo) {
                                 <i class="fas fa-calendar-check"></i>
                             </div>
                             <h2>Periodos del Contrato</h2>
-                            <button onclick="openHistorialModal()" class="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-sm">
+                            <a href="<?= BASE_URL ?>contratos/periodos/<?= $contrato['id_contrato'] ?>" class="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-sm inline-flex items-center">
                                 <i class="fas fa-history mr-1"></i>Ver Historial
-                            </button>
+                            </a>
                         </div>
                         <div class="section-card-body">
                             <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -1308,6 +1308,7 @@ function togglePeriodoDetail(idPeriodo) {
                                             <th>Periodo</th>
                                             <th>Monto</th>
                                             <th>Concepto</th>
+                                            <th>Comprobante</th>
                                             <th class="text-right">Acciones</th>
                                         </tr>
                                     </thead>
@@ -1335,6 +1336,18 @@ function togglePeriodoDetail(idPeriodo) {
                                                     <td class="text-xs text-gray-600">
                                                         <?= htmlspecialchars($pago['concepto'] ?? 'Pago diario') ?>
                                                     </td>
+                                                    <td class="text-center">
+                                                        <?php if (!empty($pago['comprobante'])): ?>
+                                                            <a href="<?= BASE_URL ?><?= htmlspecialchars($pago['comprobante']) ?>"
+                                                               target="_blank"
+                                                               class="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors inline-flex items-center gap-1"
+                                                               title="Ver comprobante">
+                                                                <i class="fas fa-eye"></i>
+                                                                Ver
+                                                            </a>
+                                                        <?php else: ?>
+                                                            <span class="text-xs text-gray-400">Sin comprobante</span>
+                                                        <?php endif; ?>
                                                     <td class="text-right">
                                                         <div class="flex gap-1 justify-end">
                                                             <a href="<?= BASE_URL ?>pagos/edit/<?= $pago['id_pago'] ?>" class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors" title="Editar pago">
@@ -1351,7 +1364,7 @@ function togglePeriodoDetail(idPeriodo) {
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="5" class="text-center py-6 text-gray-400">
+                                                <td colspan="6" class="text-center py-6 text-gray-400">
                                                     <i class="fas fa-receipt text-2xl mb-2 block"></i>
                                                     No hay pagos registrados
                                                 </td>

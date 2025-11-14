@@ -14,7 +14,8 @@ class PagoContrato extends BaseModel {
         'id_usuario',
         'fecha_pago',
         'monto_pago',
-        'concepto'
+        'concepto',
+        'comprobante'
     ];
 
     /**
@@ -93,7 +94,8 @@ class PagoContrato extends BaseModel {
             'id_usuario' => $data['id_usuario'],
             'fecha_pago' => $data['fecha_pago'],
             'monto_pago' => $data['monto_pago'],
-            'concepto' => $data['concepto'] ?? ''
+            'concepto' => $data['concepto'] ?? '',
+            'comprobante' => $data['comprobante'] ?? null
         ]);
 
         // Actualizar y reflejar
@@ -163,7 +165,8 @@ class PagoContrato extends BaseModel {
             'fecha_pago' => $data['fecha_pago'],
             'monto_pago' => $data['monto_pago'],
             'concepto' => $data['concepto'],
-            'id_usuario' => $data['id_usuario']
+            'id_usuario' => $data['id_usuario'],
+            'comprobante' => $data['comprobante'] ?? null
         ]);
 
         // Si cambió el monto, ajustar la cuota acumulada del periodo
